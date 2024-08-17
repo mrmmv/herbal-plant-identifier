@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+    <script type="text/javascript">
+        function sendMessage() {
+            window.parent.postMessage('Hello from HTML', '*');
+        }
+    </script>
+</head>
+<body>
+    <h1>Simple Communication Test</h1>
+    <button onclick="sendMessage()">Send Message to App</button>
+</body>
+</html>
