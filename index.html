@@ -1,15 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Simple Test</title>
-    <script type="text/javascript">
-        function sendMessage() {
-            window.parent.postMessage('Hello from HTML', '*');
-        }
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIT App Inventor Message</title>
 </head>
 <body>
-    <h1>Simple Communication Test</h1>
-    <button onclick="sendMessage()">Send Message to App</button>
+    <h1>Hello from GitHub Pages!</h1>
+    <button onclick="sendMessage()">Send Message to MIT App Inventor</button>
+
+    <script>
+        function sendMessage() {
+            window.AppInventor.setWebViewString("Hello from the HTML file!");
+        }
+    </script>
 </body>
 </html>
