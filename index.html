@@ -1,122 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Herbal Plant Detector</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background: linear-gradient(to bottom, #00c851, #ccffcc);
-            font-family: Arial, sans-serif;
-            margin: 0;
-        }
-        h1 {
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        #webcam-container, #label-container {
-            margin-top: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
-</head>
-<body>
-    <h1>Herbal Plant Detector</h1>
-    <button type="button" id="startBtn" onclick="init()">Start Camera</button>
-    <button type="button" id="captureBtn" style="display:none;" onclick="capture()">Capture</button>
-    <div id="webcam-container"></div>
-    <div id="label-container"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-database.js"></script>
-    <script type="text/javascript">
-        const firebaseConfig = {
-            apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
-            authDomain: "herby-21c6a.firebaseapp.com",
-            databaseURL: "https://herby-21c6a-default-rtdb.firebaseio.com",
-            projectId: "herby-21c6a",
-            storageBucket: "herby-21c6a.appspot.com",
-            messagingSenderId: "374602315706",
-            appId: "1:374602315706:web:1b948f85b8c1e6915c0f83"
-        };
+<div>Teachable Machine Image Model</div>
+<button type="button" onclick="init()">Start</button>
+<div id="webcam-container"></div>
+<div id="label-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<script type="text/javascript">
+    // the link to your model provided by Teachable Machine export panel
+    const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
 
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database(app);
+    let model, webcam, labelContainer, maxPredictions;
 
-        const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
-        let model, webcam, labelContainer, maxPredictions;
-        const herbalPlants = ["Hibiscus rosa-sinensis(Gumamela)", "Psidium guajava(Bayabas)", "Antidesma bunius(Bignay)", "Vitex negundo(Lagundi)", "Moringa oleifera(Malunggay)", "Blumea balsamifera(Sambong)", "Origanum vulgare(Oregano)", "Pepromia pellucida(Ulasimang-bato)", "Centella asiatica(Takip-Kohol)", "Coleus scuttelarioedes (Mayana)", "Phyllanthus niruri(Sampa-sampalukan)", "Corchorus olitorius(Saluyot)", "Momordica charantia (Marigoso)", "Euphorbia hirta(Tawa-tawa)", "Curcuma longa(Turmeric)", "Carmona retusa(Tsaang-Gubat)", "Senna alata(Akapulko)", "Mentha cordifolia Opiz(Mint)", "Capsicum frutescens(Siling labuyo)", "Jatropha curcas(Tubang-bakod)", "Ocimum basilicum(Basil)", "Nerium oleander(South Sea Rose)", "Pandanus amaryllifolius(Pandan)", "Aloe barbadensis Miller(Alovera)", "Lagerstroemia speciosa(Banaba)", "Averrhoea bilimbi(Kamias)","Annona muricata(Guyabano)","Citrus aurantiifolia(Lime)","Premna odorata(Alagaw)","Gliricidia sepium(Kawate)","Citrus sinensis(Orange)","Mangifera indica(Mangga)","Citrus microcarpa(Calamansi)","Impatiens balsamina(Kamantague)","Arachis hypogaea(Peanut)","Tamarindus indica(Tamarind)","Leucaena leucocephala(Ipil-Ipil)","Ipomoea batatas(Kamote)","Manihot esculenta(Cassava)","Citrus maxima(Pomelo)"];
+    // List of herbal plant class names in your model
+    const herbalPlants = ["Herbal Plant 1", "Herbal Plant 2", "Herbal Plant 3"]; // Replace with your actual herbal plant names
 
-        async function init() {
-            document.getElementById('startBtn').style.display = 'none';
-            const modelURL = URL + "model.json";
-            const metadataURL = URL + "metadata.json";
+    // Load the image model and setup the webcam
+    async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
 
-            model = await tmImage.load(modelURL, metadataURL);
-            maxPredictions = model.getTotalClasses();
+        // load the model and metadata
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
 
-            try {
-                webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
-                await webcam.setup();
-                await webcam.play();
-                document.getElementById('webcam-container').appendChild(webcam.canvas);
-                labelContainer = document.getElementById("label-container");
-                labelContainer.appendChild(document.createElement("div"));
-                document.getElementById('captureBtn').style.display = 'block';
-            } catch (error) {
-                alert("Unable to access the camera: " + error);
+        // Setup the webcam
+        const flip = true; // whether to flip the webcam
+        webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+        await webcam.setup(); // request access to the webcam
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+
+        // append elements to the DOM
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        labelContainer = document.getElementById("label-container");
+        labelContainer.appendChild(document.createElement("div")); // For displaying prediction
+    }
+
+    async function loop() {
+        webcam.update(); // update the webcam frame
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    // Run the webcam image through the image model
+    async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        let isHerbalPlant = false;
+        let highestProbability = 0;
+        let bestPrediction = "";
+
+        // Find the prediction with the highest probability
+        for (let i = 0; i < maxPredictions; i++) {
+            if (prediction[i].probability > highestProbability) {
+                highestProbability = prediction[i].probability;
+                bestPrediction = prediction[i].className;
             }
         }
 
-        async function capture() {
-            const prediction = await model.predict(webcam.canvas);
-            let isHerbalPlant = false;
-            let highestProbability = 0;
-            let bestPrediction = "";
-
-            for (let i = 0; i < maxPredictions; i++) {
-                if (prediction[i].probability > highestProbability) {
-                    highestProbability = prediction[i].probability;
-                    bestPrediction = prediction[i].className;
-                }
-            }
-
-            if (herbalPlants.includes(bestPrediction)) {
-                isHerbalPlant = true;
-                getHerbalDescription(bestPrediction);
-            } else {
-                labelContainer.childNodes[0].innerHTML = "Not a herbal plant";
-            }
+        // Check if the best prediction is a herbal plant
+        if (herbalPlants.includes(bestPrediction)) {
+            isHerbalPlant = true;
         }
 
-        function getHerbalDescription(plantName) {
-            const descriptionRef = firebase.database().ref('herbals/' + plantName);
-            descriptionRef.once('value').then((snapshot) => {
-                const description = snapshot.val().description;
-                labelContainer.childNodes[0].innerHTML = `${plantName}: ${description}`;
-            }).catch((error) => {
-                console.error('Error fetching description:', error);
-                labelContainer.childNodes[0].innerHTML = `${plantName}: Description not found`;
-            });
+        // Display the result
+        if (isHerbalPlant) {
+            labelContainer.childNodes[0].innerHTML = bestPrediction + ": " + (highestProbability * 100).toFixed(2) + "%";
+        } else {
+            labelContainer.childNodes[0].innerHTML = "Not a herbal plant";
         }
-    </script>
-</body>
-</html>
+    }
+</script>
