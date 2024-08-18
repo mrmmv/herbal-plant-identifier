@@ -11,12 +11,15 @@
             text-align: center;
             background: linear-gradient(to right, #2E8B57, #3CB371);
             color: white;
+            padding: 10px;
         }
 
         #webcam-container {
             margin: 20px auto;
-            width: 300px;
-            height: 300px;
+            width: 80vw;
+            height: 80vw;
+            max-width: 300px;
+            max-height: 300px;
             border: 5px solid #fff;
             border-radius: 10px;
             overflow: hidden;
@@ -24,13 +27,14 @@
 
         #label-container {
             margin-top: 20px;
+            font-size: 4vw; /* Adjusts based on viewport width */
         }
 
         button {
             background-color: #3CB371;
             border: none;
-            padding: 15px 30px;
-            font-size: 18px;
+            padding: 10px 20px;
+            font-size: 4vw; /* Adjusts based on viewport width */
             color: white;
             border-radius: 5px;
             cursor: pointer;
@@ -45,11 +49,21 @@
             margin-top: 20px;
             display: none;
         }
+
+        @media (min-width: 768px) {
+            #label-container {
+                font-size: 1.5em; /* Larger font for larger screens */
+            }
+
+            button {
+                font-size: 1.25em; /* Larger font for larger screens */
+            }
+        }
     </style>
 </head>
 <body>
     <h1>Herbal Plant Identifier</h1>
-    <button type="button" onclick="init()">Start Webcam</button>
+    <button type="button" onclick="init()">Start Camera</button>
     <div id="webcam-container"></div>
     <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
     <div id="label-container"></div>
@@ -66,22 +80,20 @@
 
     <script type="text/javascript">
         window.onload = function() {
-            // Your web app's Firebase configuration
             const firebaseConfig = {
-                apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
-                authDomain: "herby-21c6a.firebaseapp.com",
-                databaseURL: "https://herby-21c6a-default-rtdb.firebaseio.com",
-                projectId: "herby-21c6a",
-                storageBucket: "herby-21c6a.appspot.com",
-                messagingSenderId: "374602315706",
-                appId: "1:374602315706:web:1b948f85b8c1e6915c0f83"
+                apiKey: "YOUR_API_KEY",
+                authDomain: "YOUR_AUTH_DOMAIN",
+                databaseURL: "YOUR_DATABASE_URL",
+                projectId: "YOUR_PROJECT_ID",
+                storageBucket: "YOUR_STORAGE_BUCKET",
+                messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+                appId: "YOUR_APP_ID"
             };
 
-            // Initialize Firebase
             const app = firebase.initializeApp(firebaseConfig);
             const database = firebase.database();
 
-            const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
+            const URL = "https://teachablemachine.withgoogle.com/models/YOUR_MODEL/";
 
             let model, video, labelContainer, maxPredictions;
 
@@ -93,7 +105,6 @@
                     model = await tmImage.load(modelURL, metadataURL);
                     maxPredictions = model.getTotalClasses();
 
-                    // Request access to the webcam
                     const constraints = { video: { width: 300, height: 300 } };
                     const stream = await navigator.mediaDevices.getUserMedia(constraints);
                     video = document.createElement("video");
@@ -108,10 +119,8 @@
                     labelContainer = document.getElementById("label-container");
                     labelContainer.appendChild(document.createElement("div"));
 
-                    // Show the capture button once the webcam is ready
                     document.getElementById("capture-btn").style.display = "inline-block";
 
-                    // Start the prediction loop
                     video.onloadedmetadata = () => {
                         window.requestAnimationFrame(loop);
                     };
@@ -136,7 +145,7 @@
                     if (probability >= 0.5) { 
                         labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
                         herbalPlantFound = true;
-                        fetchDescription(className); // Fetch description from Firebase
+                        fetchDescription(className);
                         break;
                     }
                 }
@@ -167,7 +176,6 @@
                 const context = canvas.getContext('2d');
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // Pass the canvas element to the predict function
                 await predict(canvas);
             }
 
