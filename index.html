@@ -55,9 +55,14 @@
                 // Convert predictions to an array
                 const predictionsArray = Array.from(predictions);
 
+                console.log("Predictions array:", predictionsArray);
+
                 // Find the highest prediction probability and its corresponding class
                 const maxPrediction = Math.max(...predictionsArray);
                 const predictedClassIndex = predictionsArray.indexOf(maxPrediction);
+
+                console.log("Max prediction value:", maxPrediction);
+                console.log("Predicted class index:", predictedClassIndex);
 
                 // If the highest prediction is below the threshold, consider it not a herbal plant
                 if (maxPrediction < confidenceThreshold) {
@@ -92,14 +97,17 @@
         window.addEventListener('message', async (event) => {
             try {
                 const imageUrl = event.data;  // The image URL sent from the app
+                console.log("Received image URL:", imageUrl);
+
                 if (imageUrl) {
                     const prediction = await predictImage(imageUrl);
-                    console.log(prediction);
+                    console.log("Prediction result:", prediction);
+
                     // Send the prediction result back to MIT App Inventor or React Native WebView
                     if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-                        window.ReactNativeWebView.postMessage(prediction);
+                        window.ReactNativeWebView.postMessage(`"${prediction}"`);
                     } else {
-                        window.postMessage(prediction, '*');
+                        window.postMessage(`"${prediction}"`, '*');
                     }
                 } else {
                     console.error("Invalid image URL received:", imageUrl);
