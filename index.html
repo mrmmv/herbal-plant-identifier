@@ -43,6 +43,7 @@
 
         #capture-btn {
             margin-top: 20px;
+            display: none;
         }
     </style>
 </head>
@@ -50,7 +51,7 @@
     <h1>Herbal Plant Identifier</h1>
     <button type="button" onclick="init()">Start Webcam</button>
     <div id="webcam-container"></div>
-    <button id="capture-btn" type="button" onclick="captureImage()" style="display:none;">Capture Image</button>
+    <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
     <div id="label-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -67,7 +68,8 @@
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
 
-            const flip = true; 
+            // Flip set to false for mobile compatibility
+            const flip = false; 
             webcam = new tmImage.Webcam(300, 300, flip); 
             await webcam.setup();
             await webcam.play();
@@ -77,6 +79,7 @@
             labelContainer = document.getElementById("label-container");
             labelContainer.appendChild(document.createElement("div"));
 
+            // Show the capture button once the webcam is ready
             document.getElementById("capture-btn").style.display = "inline-block"; 
         }
 
