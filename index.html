@@ -16,7 +16,7 @@
         async function loadModel() {
             try {
                 model = await tf.loadLayersModel('https://mrmmv.github.io/herbal-plant-identifier/model.json');
-                console.log("Model loaded");
+                console.log("Model loaded successfully");
             } catch (error) {
                 console.error("Error loading model:", error);
             }
@@ -37,10 +37,14 @@
                             .expandDims();
                         resolve(tensor);
                     } catch (error) {
+                        console.error("Error converting image to tensor:", error);
                         reject(error);
                     }
                 };
-                img.onerror = (error) => reject(error);
+                img.onerror = (error) => {
+                    console.error("Error loading image:", error);
+                    reject(error);
+                };
             });
         }
 
@@ -86,7 +90,13 @@
                     "Leucaena leucocephala (Ipil-Ipil)", "Ipomoea batatas (Kamote)", "Manihot esculenta (Cassava)",
                     "Citrus maxima (Pomelo)"
                 ];
-                return classLabels[predictedClassIndex];
+
+                if (predictedClassIndex >= 0) {
+                    return classLabels[predictedClassIndex];
+                } else {
+                    return "Prediction error: No valid class index found";
+                }
+
             } catch (error) {
                 console.error("Error predicting image:", error);
                 return "Error in prediction";
