@@ -76,7 +76,7 @@
 </head>
 <body>
     <h1>Herbal Plant Identifier</h1>
-    <button type="button" onclick="init()">Start Camera</button>
+    <button type="button" onclick="init()">Start Webcam</button>
     <div id="webcam-container">
         <video id="webcam" autoplay playsinline></video>
         <canvas id="captured-image"></canvas>
@@ -157,7 +157,7 @@
                     const probability = predictions[i].probability.toFixed(2);
 
                     if (probability >= 0.5) { 
-                        labelContainer.childNodes[0].innerHTML = Identified: ${className} (${probability * 100}%);
+                        labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
                         herbalPlantFound = true;
                         fetchDescription(className); 
                         break;
@@ -175,9 +175,9 @@
                 descriptionRef.once('value').then((snapshot) => {
                     const description = snapshot.val();
                     if (description) {
-                        labelContainer.childNodes[0].innerHTML += <br>Description: ${description};
+                        labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
                     } else {
-                        labelContainer.childNodes[0].innerHTML += <br>Description not found in database.;
+                        labelContainer.childNodes[0].innerHTML += `<br>Description not found in database.`;
                     }
                 });
             }
