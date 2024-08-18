@@ -40,61 +40,60 @@
         button:hover {
             background-color: #2E8B57;
         }
+
+        #capture-btn {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>Herbal Plant Identifier</h1>
-    <button type="button" onclick="init()">Start</button>
+    <button type="button" onclick="init()">Start Webcam</button>
     <div id="webcam-container"></div>
+    <button id="capture-btn" type="button" onclick="captureImage()" style="display:none;">Capture Image</button>
     <div id="label-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script type="text/javascript">
-        // the link to your model provided by Teachable Machine export panel
         const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
 
         let model, webcam, labelContainer, maxPredictions;
 
-        // Load the image model and setup the webcam
         async function init() {
             const modelURL = URL + "model.json";
             const metadataURL = URL + "metadata.json";
 
-            // load the model and metadata
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
 
-            // Setup the webcam
-            const flip = true; // whether to flip the webcam
-            webcam = new tmImage.Webcam(300, 300, flip); // width, height, flip
-            await webcam.setup(); // request access to the webcam
+            const flip = true; 
+            webcam = new tmImage.Webcam(300, 300, flip); 
+            await webcam.setup();
             await webcam.play();
             window.requestAnimationFrame(loop);
 
-            // append elements to the DOM
             document.getElementById("webcam-container").appendChild(webcam.canvas);
             labelContainer = document.getElementById("label-container");
             labelContainer.appendChild(document.createElement("div"));
+
+            document.getElementById("capture-btn").style.display = "inline-block"; 
         }
 
         async function loop() {
-            webcam.update(); // update the webcam frame
-            await predict();
+            webcam.update(); 
             window.requestAnimationFrame(loop);
         }
 
-        // run the webcam image through the image model
-        async function predict() {
-            // predict can take in an image, video or canvas html element
-            const prediction = await model.predict(webcam.canvas);
+        async function predict(image) {
+            const prediction = await model.predict(image);
             let herbalPlantFound = false;
 
             for (let i = 0; i < maxPredictions; i++) {
                 const className = prediction[i].className;
                 const probability = prediction[i].probability.toFixed(2);
 
-                if (probability >= 0.5) { // assuming 50% is a good threshold for identification
+                if (probability >= 0.5) { 
                     labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
                     herbalPlantFound = true;
                     break;
@@ -104,6 +103,11 @@
             if (!herbalPlantFound) {
                 labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
             }
+        }
+
+        async function captureImage() {
+            const image = webcam.canvas;
+            await predict(image);
         }
     </script>
 </body>
