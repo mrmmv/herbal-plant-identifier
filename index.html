@@ -1,71 +1,110 @@
-<div>Teachable Machine Image Model</div>
-<button type="button" onclick="init()">Start</button>
-<div id="webcam-container"></div>
-<div id="label-container"></div>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-<script type="text/javascript">
-    // the link to your model provided by Teachable Machine export panel
-    const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herbal Plant Identifier</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #2E8B57, #3CB371);
+            color: white;
+        }
 
-    let model, webcam, labelContainer, maxPredictions;
+        #webcam-container {
+            margin: 20px auto;
+            width: 300px;
+            height: 300px;
+            border: 5px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
 
-    // List of herbal plant class names in your model
-    const herbalPlants = ["Herbal Plant 1", "Herbal Plant 2", "Herbal Plant 3"]; // Replace with your actual herbal plant names
+        #label-container {
+            margin-top: 20px;
+        }
 
-    // Load the image model and setup the webcam
-    async function init() {
-        const modelURL = URL + "model.json";
-        const metadataURL = URL + "metadata.json";
+        button {
+            background-color: #3CB371;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
 
-        // load the model and metadata
-        model = await tmImage.load(modelURL, metadataURL);
-        maxPredictions = model.getTotalClasses();
+        button:hover {
+            background-color: #2E8B57;
+        }
+    </style>
+</head>
+<body>
+    <h1>Herbal Plant Identifier</h1>
+    <button type="button" onclick="init()">Start</button>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
 
-        // Setup the webcam
-        const flip = true; // whether to flip the webcam
-        webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
-        await webcam.setup(); // request access to the webcam
-        await webcam.play();
-        window.requestAnimationFrame(loop);
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
 
-        // append elements to the DOM
-        document.getElementById("webcam-container").appendChild(webcam.canvas);
-        labelContainer = document.getElementById("label-container");
-        labelContainer.appendChild(document.createElement("div")); // For displaying prediction
-    }
+        let model, webcam, labelContainer, maxPredictions;
 
-    async function loop() {
-        webcam.update(); // update the webcam frame
-        await predict();
-        window.requestAnimationFrame(loop);
-    }
+        // Load the image model and setup the webcam
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
 
-    // Run the webcam image through the image model
-    async function predict() {
-        const prediction = await model.predict(webcam.canvas);
-        let isHerbalPlant = false;
-        let highestProbability = 0;
-        let bestPrediction = "";
+            // load the model and metadata
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
 
-        // Find the prediction with the highest probability
-        for (let i = 0; i < maxPredictions; i++) {
-            if (prediction[i].probability > highestProbability) {
-                highestProbability = prediction[i].probability;
-                bestPrediction = prediction[i].className;
+            // Setup the webcam
+            const flip = true; // whether to flip the webcam
+            webcam = new tmImage.Webcam(300, 300, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            // append elements to the DOM
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            labelContainer.appendChild(document.createElement("div"));
+        }
+
+        async function loop() {
+            webcam.update(); // update the webcam frame
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        // run the webcam image through the image model
+        async function predict() {
+            // predict can take in an image, video or canvas html element
+            const prediction = await model.predict(webcam.canvas);
+            let herbalPlantFound = false;
+
+            for (let i = 0; i < maxPredictions; i++) {
+                const className = prediction[i].className;
+                const probability = prediction[i].probability.toFixed(2);
+
+                if (probability >= 0.5) { // assuming 50% is a good threshold for identification
+                    labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
+                    herbalPlantFound = true;
+                    break;
+                }
+            }
+
+            if (!herbalPlantFound) {
+                labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
             }
         }
-
-        // Check if the best prediction is a herbal plant
-        if (herbalPlants.includes(bestPrediction)) {
-            isHerbalPlant = true;
-        }
-
-        // Display the result
-        if (isHerbalPlant) {
-            labelContainer.childNodes[0].innerHTML = bestPrediction + ": " + (highestProbability * 100).toFixed(2) + "%";
-        } else {
-            labelContainer.childNodes[0].innerHTML = "Not a herbal plant";
-        }
-    }
-</script>
+    </script>
+</body>
+</html>
