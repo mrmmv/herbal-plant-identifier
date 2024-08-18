@@ -125,13 +125,13 @@
                 window.requestAnimationFrame(loop);
             }
 
-            async function predict(image) {
-                const prediction = await model.predict(image);
+            async function predict(imageElement) {
+                const predictions = await model.predict(imageElement);
                 let herbalPlantFound = false;
 
                 for (let i = 0; i < maxPredictions; i++) {
-                    const className = prediction[i].className;
-                    const probability = prediction[i].probability.toFixed(2);
+                    const className = predictions[i].className;
+                    const probability = predictions[i].probability.toFixed(2);
 
                     if (probability >= 0.5) { 
                         labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
@@ -167,9 +167,8 @@
                 const context = canvas.getContext('2d');
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                const image = tf.browser.fromPixels(canvas);
-                await predict(image);
-                image.dispose();
+                // Pass the canvas element to the predict function
+                await predict(canvas);
             }
 
             window.init = init;
