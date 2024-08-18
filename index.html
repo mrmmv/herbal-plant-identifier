@@ -12,58 +12,98 @@
 
         // Load the TensorFlow.js model
         async function loadModel() {
-            model = await tf.loadLayersModel('https://mrmmv.github.io/herbal-plant-identifier/model.json');
-            console.log("Model loaded");
+            try {
+                model = await tf.loadLayersModel('https://mrmmv.github.io/herbal-plant-identifier/model.json');
+                console.log("Model loaded");
+            } catch (error) {
+                console.error("Error loading model:", error);
+            }
         }
 
         // Convert an image from URL to a Tensor that can be processed by the model
         async function imageToTensor(imageUrl) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.crossOrigin = "anonymous";  // This allows the image to be loaded from external sources
                 img.src = imageUrl;
                 img.onload = () => {
-                    // Convert the image to a tensor
-                    const tensor = tf.browser.fromPixels(img)
-                        .resizeNearestNeighbor([224, 224])  // Adjust to your model's input size
-                        .toFloat()
-                        .expandDims();
-                    resolve(tensor);
+                    try {
+                        // Convert the image to a tensor
+                        const tensor = tf.browser.fromPixels(img)
+                            .resizeNearestNeighbor([224, 224])  // Adjust to your model's input size
+                            .toFloat()
+                            .expandDims();
+                        resolve(tensor);
+                    } catch (error) {
+                        reject(error);
+                    }
                 };
+                img.onerror = (error) => reject(error);
             });
         }
 
         // Process the image and make a prediction
         async function predictImage(imageUrl) {
-            const tensor = await imageToTensor(imageUrl);
+            try {
+                const tensor = await imageToTensor(imageUrl);
 
-            // Get predictions from the model
-            const predictions = await model.predict(tensor).data();
+                // Get predictions from the model
+                const predictions = await model.predict(tensor).data();
 
-            // Find the highest prediction probability and its corresponding class
-            let maxPrediction = Math.max(...predictions);
-            let predictedClassIndex = predictions.indexOf(maxPrediction);
+                // Find the highest prediction probability and its corresponding class
+                const maxPrediction = Math.max(...predictions);
+                const predictedClassIndex = predictions.indexOf(maxPrediction);
 
-            // If the highest prediction is below the threshold, consider it not a herbal plant
-            if (maxPrediction < confidenceThreshold) {
-                return "Not a herbal plant";
+                // If the highest prediction is below the threshold, consider it not a herbal plant
+                if (maxPrediction < confidenceThreshold) {
+                    return "Not a herbal plant";
+                }
+
+                // Map the predicted index to class names (labels)
+                const classLabels = [
+                    "Hibiscus rosa-sinensis(Gumamela)", "Psidium guajava(Bayabas)", "Antidesma bunius(Bignay)",
+                    "Vitex negundo(Lagundi)", "Moringa oleifera(Malunggay)", "Blumea balsamifera(Sambong)",
+                    "Origanum vulgare(Oregano)", "Pepromia pellucida(Ulasimang-bato)", "Centella asiatica(Takip-Kohol)",
+                    "Coleus scuttelarioedes (Mayana)", "Phyllanthus niruri(Sampa-sampalukan)", "Corchorus olitorius(Saluyot)",
+                    "Momordica charantia (Marigoso)", "Euphorbia hirta(Tawa-tawa)", "Curcuma longa(Turmeric)",
+                    "Carmona retusa(Tsaang-Gubat)", "Senna alata(Akapulko)", "Mentha cordifolia Opiz(Mint)",
+                    "Capsicum frutescens(Siling labuyo)", "Jatropha curcas(Tubang-bakod)", "Ocimum basilicum(Basil)",
+                    "Nerium oleander(South Sea Rose)", "Pandanus amaryllifolius(Pandan)", "Aloe barbadensis Miller(Alovera)",
+                    "Lagerstroemia speciosa(Banaba)", "Averrhoea bilimbi(Kamias)", "Annona muricata(Guyabano)",
+                    "Citrus aurantiifolia(Lime)", "Premna odorata(Alagaw)", "Gliricidia sepium(Kawate)",
+                    "Citrus sinensis(Orange)", "Mangifera indica(Mangga)", "Citrus microcarpa(Calamansi)",
+                    "Impatiens balsamina(Kamantague)", "Arachis hypogaea(Peanut)", "Tamarindus indica(Tamarind)",
+                    "Leucaena leucocephala(Ipil-Ipil)", "Ipomoea batatas(Kamote)", "Manihot esculenta(Cassava)",
+                    "Citrus maxima(Pomelo)"
+                ];
+                return classLabels[predictedClassIndex];
+            } catch (error) {
+                console.error("Error predicting image:", error);
+                return "Error in prediction";
             }
-
-            // Map the predicted index to class names (labels)
-            const classLabels = ["Hibiscus rosa-sinensis(Gumamela)", "Psidium guajava(Bayabas)", "Antidesma bunius(Bignay)", "Vitex negundo(Lagundi)", "Moringa oleifera(Malunggay)", "Blumea balsamifera(Sambong)", "Origanum vulgare(Oregano)", "Pepromia pellucida(Ulasimang-bato)", "Centella asiatica(Takip-Kohol)", "Coleus scuttelarioedes (Mayana)", "Phyllanthus niruri(Sampa-sampalukan)", "Corchorus olitorius(Saluyot)", "Momordica charantia (Marigoso)", "Euphorbia hirta(Tawa-tawa)", "Curcuma longa(Turmeric)", "Carmona retusa(Tsaang-Gubat)", "Senna alata(Akapulko)", "Mentha cordifolia Opiz(Mint)", "Capsicum frutescens(Siling labuyo)", "Jatropha curcas(Tubang-bakod)", "Ocimum basilicum(Basil)", "Nerium oleander(South Sea Rose)", "Pandanus amaryllifolius(Pandan)", "Aloe barbadensis Miller(Alovera)", "Lagerstroemia speciosa(Banaba)", "Averrhoea bilimbi(Kamias)","Annona muricata(Guyabano)","Citrus aurantiifolia(Lime)","Premna odorata(Alagaw)","Gliricidia sepium(Kawate)","Citrus sinensis(Orange)","Mangifera indica(Mangga)","Citrus microcarpa(Calamansi)","Impatiens balsamina(Kamantague)","Arachis hypogaea(Peanut)","Tamarindus indica(Tamarind)","Leucaena leucocephala(Ipil-Ipil)","Ipomoea batatas(Kamote)","Manihot esculenta(Cassava)","Citrus maxima(Pomelo)"];  // Replace with your actual class names
-            return classLabels[predictedClassIndex];
         }
 
         // Listen for messages from the MIT App Inventor app
         window.addEventListener('message', async (event) => {
-            const imageUrl = event.data;  // The image URL sent from the app
-            const prediction = await predictImage(imageUrl);
-            console.log(prediction);
-            // Send the prediction result back to MIT App Inventor
-            window.ReactNativeWebView.postMessage(prediction);
+            try {
+                const imageUrl = event.data;  // The image URL sent from the app
+                if (imageUrl) {
+                    const prediction = await predictImage(imageUrl);
+                    console.log(prediction);
+                    // Send the prediction result back to MIT App Inventor
+                    if (window.ReactNativeWebView) {
+                        window.ReactNativeWebView.postMessage(prediction);
+                    }
+                } else {
+                    console.error("Invalid image URL received:", imageUrl);
+                }
+            } catch (error) {
+                console.error("Error handling message:", error);
+            }
         });
 
-        loadModel();
+        // Load the model when the page loads
+        window.onload = loadModel;
     </script>
 </body>
 </html>
