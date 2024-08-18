@@ -3,132 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Herbal Plant Identifier</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <title>Herbal Plant Detector</title>
+    <style>
+        /* Add your CSS styles here */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        #webcam-container {
+            margin-top: 20px;
+        }
+        #label-container {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <h1>Herbal Plant Identifier</h1>
+    <h1>Herbal Plant Detector</h1>
+    <button type="button" onclick="init()">Start</button>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script type="text/javascript">
-        let model;
-        const confidenceThreshold = 0.6;  // Set a threshold for herbal plant detection
+        const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
+        let model, webcam, labelContainer, maxPredictions;
+        const herbalPlants = ["Herbal Plant 1", "Herbal Plant 2", "Herbal Plant 3"]; // Replace with your herbal plant names
 
-        // Load the TensorFlow.js model
-        async function loadModel() {
-            try {
-                model = await tf.loadLayersModel('https://mrmmv.github.io/herbal-plant-identifier/model.json');
-                console.log("Model loaded successfully");
-            } catch (error) {
-                console.error("Error loading model:", error);
-            }
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            const flip = true; 
+            webcam = new tmImage.Webcam(200, 200, flip); 
+            await webcam.setup(); 
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            labelContainer.appendChild(document.createElement("div"));
         }
 
-        // Convert an image from URL to a Tensor that can be processed by the model
-        async function imageToTensor(imageUrl) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.crossOrigin = "anonymous";  // This allows the image to be loaded from external sources
-                img.src = imageUrl;
-                img.onload = () => {
-                    try {
-                        // Convert the image to a tensor
-                        const tensor = tf.browser.fromPixels(img)
-                            .resizeNearestNeighbor([224, 224])  // Adjust to your model's input size
-                            .toFloat()
-                            .expandDims();
-                        resolve(tensor);
-                    } catch (error) {
-                        console.error("Error converting image to tensor:", error);
-                        reject(error);
-                    }
-                };
-                img.onerror = (error) => {
-                    console.error("Error loading image:", error);
-                    reject(error);
-                };
-            });
+        async function loop() {
+            webcam.update(); 
+            await predict();
+            window.requestAnimationFrame(loop);
         }
 
-        // Process the image and make a prediction
-        async function predictImage(imageUrl) {
-            try {
-                const tensor = await imageToTensor(imageUrl);
+        async function predict() {
+            const prediction = await model.predict(webcam.canvas);
+            let isHerbalPlant = false;
+            let highestProbability = 0;
+            let bestPrediction = "";
 
-                // Get predictions from the model
-                const predictions = await model.predict(tensor).data();
-
-                // Convert predictions to an array
-                const predictionsArray = Array.from(predictions);
-
-                console.log("Predictions array:", predictionsArray);
-
-                // Find the highest prediction probability and its corresponding class
-                const maxPrediction = Math.max(...predictionsArray);
-                const predictedClassIndex = predictionsArray.indexOf(maxPrediction);
-
-                console.log("Max prediction value:", maxPrediction);
-                console.log("Predicted class index:", predictedClassIndex);
-
-                // If the highest prediction is below the threshold, consider it not a herbal plant
-                if (maxPrediction < confidenceThreshold) {
-                    return "Not a herbal plant";
+            for (let i = 0; i < maxPredictions; i++) {
+                if (prediction[i].probability > highestProbability) {
+                    highestProbability = prediction[i].probability;
+                    bestPrediction = prediction[i].className;
                 }
+            }
 
-                // Map the predicted index to class names (labels)
-                const classLabels = [
-                    "Hibiscus rosa-sinensis (Gumamela)", "Psidium guajava (Bayabas)", "Antidesma bunius (Bignay)",
-                    "Vitex negundo (Lagundi)", "Moringa oleifera (Malunggay)", "Blumea balsamifera (Sambong)",
-                    "Origanum vulgare (Oregano)", "Peperomia pellucida (Ulasimang-bato)", "Centella asiatica (Takip-Kohol)",
-                    "Coleus scutellarioides (Mayana)", "Phyllanthus niruri (Sampa-sampalukan)", "Corchorus olitorius (Saluyot)",
-                    "Momordica charantia (Marigoso)", "Euphorbia hirta (Tawa-tawa)", "Curcuma longa (Turmeric)",
-                    "Carmona retusa (Tsaang-Gubat)", "Senna alata (Akapulko)", "Mentha cordifolia Opiz (Mint)",
-                    "Capsicum frutescens (Siling labuyo)", "Jatropha curcas (Tubang-bakod)", "Ocimum basilicum (Basil)",
-                    "Nerium oleander (South Sea Rose)", "Pandanus amaryllifolius (Pandan)", "Aloe barbadensis Miller (Aloe Vera)",
-                    "Lagerstroemia speciosa (Banaba)", "Averrhoa bilimbi (Kamias)", "Annona muricata (Guyabano)",
-                    "Citrus aurantiifolia (Lime)", "Premna odorata (Alagaw)", "Gliricidia sepium (Kakawate)",
-                    "Citrus sinensis (Orange)", "Mangifera indica (Mangga)", "Citrus microcarpa (Calamansi)",
-                    "Impatiens balsamina (Kamantigue)", "Arachis hypogaea (Peanut)", "Tamarindus indica (Tamarind)",
-                    "Leucaena leucocephala (Ipil-Ipil)", "Ipomoea batatas (Kamote)", "Manihot esculenta (Cassava)",
-                    "Citrus maxima (Pomelo)"
-                ];
+            if (herbalPlants.includes(bestPrediction)) {
+                isHerbalPlant = true;
+            }
 
-                if (predictedClassIndex >= 0) {
-                    return classLabels[predictedClassIndex];
-                } else {
-                    return "Prediction error: No valid class index found";
-                }
-
-            } catch (error) {
-                console.error("Error predicting image:", error);
-                return "Error in prediction";
+            if (isHerbalPlant) {
+                labelContainer.childNodes[0].innerHTML = bestPrediction + ": " + (highestProbability * 100).toFixed(2) + "%";
+            } else {
+                labelContainer.childNodes[0].innerHTML = "Not a herbal plant";
             }
         }
-
-        // Listen for messages from the MIT App Inventor app
-        window.addEventListener('message', async (event) => {
-            try {
-                const imageUrl = event.data;  // The image URL sent from the app
-                console.log("Received image URL:", imageUrl);
-
-                if (imageUrl) {
-                    const prediction = await predictImage(imageUrl);
-                    console.log("Prediction result:", prediction);
-
-                    // Send the prediction result back to MIT App Inventor or React Native WebView
-                    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-                        window.ReactNativeWebView.postMessage(`"${prediction}"`);
-                    } else {
-                        window.postMessage(`"${prediction}"`, '*');
-                    }
-                } else {
-                    console.error("Invalid image URL received:", imageUrl);
-                }
-            } catch (error) {
-                console.error("Error handling message:", error);
-            }
-        });
-
-        // Load the model when the page loads
-        window.onload = loadModel;
     </script>
 </body>
 </html>
