@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Herbal Plant Detector</title>
     <style>
-        /* CSS styles */
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background: linear-gradient(to bottom, #00c851, #ccffcc); /* Green gradient */
+            background: linear-gradient(to bottom, #00c851, #ccffcc);
             font-family: Arial, sans-serif;
             margin: 0;
         }
@@ -49,7 +48,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-database.js"></script>
     <script type="text/javascript">
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
             authDomain: "herby-21c6a.firebaseapp.com",
@@ -60,18 +58,13 @@
             appId: "1:374602315706:web:1b948f85b8c1e6915c0f83"
         };
 
-        // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database(app);
 
-        // Teachable Machine Model URL
         const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
         let model, webcam, labelContainer, maxPredictions;
+        const herbalPlants = ["Hibiscus rosa-sinensis(Gumamela)", "Psidium guajava(Bayabas)", "Antidesma bunius(Bignay)", "Vitex negundo(Lagundi)", "Moringa oleifera(Malunggay)", "Blumea balsamifera(Sambong)", "Origanum vulgare(Oregano)", "Pepromia pellucida(Ulasimang-bato)", "Centella asiatica(Takip-Kohol)", "Coleus scuttelarioedes (Mayana)", "Phyllanthus niruri(Sampa-sampalukan)", "Corchorus olitorius(Saluyot)", "Momordica charantia (Marigoso)", "Euphorbia hirta(Tawa-tawa)", "Curcuma longa(Turmeric)", "Carmona retusa(Tsaang-Gubat)", "Senna alata(Akapulko)", "Mentha cordifolia Opiz(Mint)", "Capsicum frutescens(Siling labuyo)", "Jatropha curcas(Tubang-bakod)", "Ocimum basilicum(Basil)", "Nerium oleander(South Sea Rose)", "Pandanus amaryllifolius(Pandan)", "Aloe barbadensis Miller(Alovera)", "Lagerstroemia speciosa(Banaba)", "Averrhoea bilimbi(Kamias)","Annona muricata(Guyabano)","Citrus aurantiifolia(Lime)","Premna odorata(Alagaw)","Gliricidia sepium(Kawate)","Citrus sinensis(Orange)","Mangifera indica(Mangga)","Citrus microcarpa(Calamansi)","Impatiens balsamina(Kamantague)","Arachis hypogaea(Peanut)","Tamarindus indica(Tamarind)","Leucaena leucocephala(Ipil-Ipil)","Ipomoea batatas(Kamote)","Manihot esculenta(Cassava)","Citrus maxima(Pomelo)"];
 
-        // List of herbal plant class names in your model
-        const herbalPlants = ["Hibiscus rosa-sinensis(Gumamela)", "Psidium guajava(Bayabas)", "Antidesma bunius(Bignay)", "Vitex negundo(Lagundi)", "Moringa oleifera(Malunggay)", "Blumea balsamifera(Sambong)", "Origanum vulgare(Oregano)", "Pepromia pellucida(Ulasimang-bato)", "Centella asiatica(Takip-Kohol)", "Coleus scuttelarioedes (Mayana)", "Phyllanthus niruri(Sampa-sampalukan)", "Corchorus olitorius(Saluyot)", "Momordica charantia (Marigoso)", "Euphorbia hirta(Tawa-tawa)", "Curcuma longa(Turmeric)", "Carmona retusa(Tsaang-Gubat)", "Senna alata(Akapulko)", "Mentha cordifolia Opiz(Mint)", "Capsicum frutescens(Siling labuyo)", "Jatropha curcas(Tubang-bakod)", "Ocimum basilicum(Basil)", "Nerium oleander(South Sea Rose)", "Pandanus amaryllifolius(Pandan)", "Aloe barbadensis Miller(Alovera)", "Lagerstroemia speciosa(Banaba)", "Averrhoea bilimbi(Kamias)","Annona muricata(Guyabano)","Citrus aurantiifolia(Lime)","Premna odorata(Alagaw)","Gliricidia sepium(Kawate)","Citrus sinensis(Orange)","Mangifera indica(Mangga)","Citrus microcarpa(Calamansi)","Impatiens balsamina(Kamantague)","Arachis hypogaea(Peanut)","Tamarindus indica(Tamarind)","Leucaena leucocephala(Ipil-Ipil)","Ipomoea batatas(Kamote)","Manihot esculenta(Cassava)","Citrus maxima(Pomelo)"]; // Replace with your actual herbal plant names
-
-        // Load the image model and setup the webcam
         async function init() {
             document.getElementById('startBtn').style.display = 'none';
             const modelURL = URL + "model.json";
@@ -80,14 +73,17 @@
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
 
-            webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
-            await webcam.setup(); 
-            await webcam.play();
-            document.getElementById('webcam-container').appendChild(webcam.canvas);
-            labelContainer = document.getElementById("label-container");
-            labelContainer.appendChild(document.createElement("div"));
-
-            document.getElementById('captureBtn').style.display = 'block';
+            try {
+                webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
+                await webcam.setup();
+                await webcam.play();
+                document.getElementById('webcam-container').appendChild(webcam.canvas);
+                labelContainer = document.getElementById("label-container");
+                labelContainer.appendChild(document.createElement("div"));
+                document.getElementById('captureBtn').style.display = 'block';
+            } catch (error) {
+                alert("Unable to access the camera: " + error);
+            }
         }
 
         async function capture() {
@@ -96,7 +92,6 @@
             let highestProbability = 0;
             let bestPrediction = "";
 
-            // Find the prediction with the highest probability
             for (let i = 0; i < maxPredictions; i++) {
                 if (prediction[i].probability > highestProbability) {
                     highestProbability = prediction[i].probability;
@@ -106,13 +101,12 @@
 
             if (herbalPlants.includes(bestPrediction)) {
                 isHerbalPlant = true;
-                getHerbalDescription(bestPrediction); // Fetch description from Firebase
+                getHerbalDescription(bestPrediction);
             } else {
                 labelContainer.childNodes[0].innerHTML = "Not a herbal plant";
             }
         }
 
-        // Function to get herbal plant description from Firebase
         function getHerbalDescription(plantName) {
             const descriptionRef = firebase.database().ref('herbals/' + plantName);
             descriptionRef.once('value').then((snapshot) => {
