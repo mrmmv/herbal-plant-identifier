@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Herbal Plant Identifier</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 </head>
@@ -50,9 +52,12 @@
                 // Get predictions from the model
                 const predictions = await model.predict(tensor).data();
 
+                // Convert predictions to an array
+                const predictionsArray = Array.from(predictions);
+
                 // Find the highest prediction probability and its corresponding class
-                const maxPrediction = Math.max(...predictions);
-                const predictedClassIndex = predictions.indexOf(maxPrediction);
+                const maxPrediction = Math.max(...predictionsArray);
+                const predictedClassIndex = predictionsArray.indexOf(maxPrediction);
 
                 // If the highest prediction is below the threshold, consider it not a herbal plant
                 if (maxPrediction < confidenceThreshold) {
@@ -61,20 +66,20 @@
 
                 // Map the predicted index to class names (labels)
                 const classLabels = [
-                    "Hibiscus rosa-sinensis(Gumamela)", "Psidium guajava(Bayabas)", "Antidesma bunius(Bignay)",
-                    "Vitex negundo(Lagundi)", "Moringa oleifera(Malunggay)", "Blumea balsamifera(Sambong)",
-                    "Origanum vulgare(Oregano)", "Pepromia pellucida(Ulasimang-bato)", "Centella asiatica(Takip-Kohol)",
-                    "Coleus scuttelarioedes (Mayana)", "Phyllanthus niruri(Sampa-sampalukan)", "Corchorus olitorius(Saluyot)",
-                    "Momordica charantia (Marigoso)", "Euphorbia hirta(Tawa-tawa)", "Curcuma longa(Turmeric)",
-                    "Carmona retusa(Tsaang-Gubat)", "Senna alata(Akapulko)", "Mentha cordifolia Opiz(Mint)",
-                    "Capsicum frutescens(Siling labuyo)", "Jatropha curcas(Tubang-bakod)", "Ocimum basilicum(Basil)",
-                    "Nerium oleander(South Sea Rose)", "Pandanus amaryllifolius(Pandan)", "Aloe barbadensis Miller(Alovera)",
-                    "Lagerstroemia speciosa(Banaba)", "Averrhoea bilimbi(Kamias)", "Annona muricata(Guyabano)",
-                    "Citrus aurantiifolia(Lime)", "Premna odorata(Alagaw)", "Gliricidia sepium(Kawate)",
-                    "Citrus sinensis(Orange)", "Mangifera indica(Mangga)", "Citrus microcarpa(Calamansi)",
-                    "Impatiens balsamina(Kamantague)", "Arachis hypogaea(Peanut)", "Tamarindus indica(Tamarind)",
-                    "Leucaena leucocephala(Ipil-Ipil)", "Ipomoea batatas(Kamote)", "Manihot esculenta(Cassava)",
-                    "Citrus maxima(Pomelo)"
+                    "Hibiscus rosa-sinensis (Gumamela)", "Psidium guajava (Bayabas)", "Antidesma bunius (Bignay)",
+                    "Vitex negundo (Lagundi)", "Moringa oleifera (Malunggay)", "Blumea balsamifera (Sambong)",
+                    "Origanum vulgare (Oregano)", "Peperomia pellucida (Ulasimang-bato)", "Centella asiatica (Takip-Kohol)",
+                    "Coleus scutellarioides (Mayana)", "Phyllanthus niruri (Sampa-sampalukan)", "Corchorus olitorius (Saluyot)",
+                    "Momordica charantia (Marigoso)", "Euphorbia hirta (Tawa-tawa)", "Curcuma longa (Turmeric)",
+                    "Carmona retusa (Tsaang-Gubat)", "Senna alata (Akapulko)", "Mentha cordifolia Opiz (Mint)",
+                    "Capsicum frutescens (Siling labuyo)", "Jatropha curcas (Tubang-bakod)", "Ocimum basilicum (Basil)",
+                    "Nerium oleander (South Sea Rose)", "Pandanus amaryllifolius (Pandan)", "Aloe barbadensis Miller (Aloe Vera)",
+                    "Lagerstroemia speciosa (Banaba)", "Averrhoa bilimbi (Kamias)", "Annona muricata (Guyabano)",
+                    "Citrus aurantiifolia (Lime)", "Premna odorata (Alagaw)", "Gliricidia sepium (Kakawate)",
+                    "Citrus sinensis (Orange)", "Mangifera indica (Mangga)", "Citrus microcarpa (Calamansi)",
+                    "Impatiens balsamina (Kamantigue)", "Arachis hypogaea (Peanut)", "Tamarindus indica (Tamarind)",
+                    "Leucaena leucocephala (Ipil-Ipil)", "Ipomoea batatas (Kamote)", "Manihot esculenta (Cassava)",
+                    "Citrus maxima (Pomelo)"
                 ];
                 return classLabels[predictedClassIndex];
             } catch (error) {
@@ -90,9 +95,11 @@
                 if (imageUrl) {
                     const prediction = await predictImage(imageUrl);
                     console.log(prediction);
-                    // Send the prediction result back to MIT App Inventor
-                    if (window.ReactNativeWebView) {
+                    // Send the prediction result back to MIT App Inventor or React Native WebView
+                    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
                         window.ReactNativeWebView.postMessage(prediction);
+                    } else {
+                        window.postMessage(prediction, '*');
                     }
                 } else {
                     console.error("Invalid image URL received:", imageUrl);
