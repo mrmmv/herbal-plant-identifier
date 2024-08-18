@@ -13,7 +13,6 @@
             color: white;
             padding: 10px;
         }
-
         #webcam-container {
             margin: 20px auto;
             width: 80vw;
@@ -25,19 +24,16 @@
             overflow: hidden;
             position: relative;
         }
-
         video, canvas {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: none;
         }
-
         #label-container {
             margin-top: 20px;
             font-size: 4vw;
         }
-
         button {
             background-color: #3CB371;
             border: none;
@@ -48,26 +44,21 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-
         button:hover {
             background-color: #2E8B57;
         }
-
         #capture-btn {
             margin-top: 20px;
             display: none;
         }
-
         @media (min-width: 768px) {
             #webcam-container {
                 width: 300px;
                 height: 300px;
             }
-
             #label-container {
                 font-size: 18px;
             }
-
             button {
                 font-size: 18px;
             }
@@ -76,12 +67,9 @@
 </head>
 <body>
     <h1>Herbal Plant Identifier</h1>
-    <button type="button" onclick="init()">Start Camera</button>
     <div id="webcam-container">
-        <video id="webcam" autoplay playsinline></video>
         <canvas id="captured-image"></canvas>
     </div>
-    <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
     <div id="label-container"></div>
 
     <!-- Firebase App (the core Firebase SDK) -->
@@ -95,7 +83,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
     <script type="text/javascript">
-        window.onload = function() {
+        document.addEventListener("DOMContentLoaded", function () {
             const firebaseConfig = {
                 apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
                 authDomain: "herby-21c6a.firebaseapp.com",
@@ -111,7 +99,7 @@
 
             const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
 
-            let model, video, labelContainer, maxPredictions, canvas, context;
+            let model, maxPredictions, canvas, context;
 
             async function init() {
                 try {
@@ -121,79 +109,70 @@
                     model = await tmImage.load(modelURL, metadataURL);
                     maxPredictions = model.getTotalClasses();
 
-                    video = document.getElementById("webcam");
                     canvas = document.getElementById("captured-image");
                     context = canvas.getContext('2d');
 
-                    const constraints = { video: { width: 300, height: 300 } };
-                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    video.srcObject = stream;
-                    video.style.display = 'block';
-
-                    labelContainer = document.getElementById("label-container");
-                    labelContainer.appendChild(document.createElement("div"));
-
-                    document.getElementById("capture-btn").style.display = "inline-block";
-
-                    video.onloadedmetadata = () => {
-                        window.requestAnimationFrame(loop);
-                    };
-
                 } catch (error) {
-                    console.error("Error initializing the webcam or model:", error);
+                    console.error("Error initializing the model:", error);
                 }
-            }
-
-            async function loop() {
-                window.requestAnimationFrame(loop);
             }
 
             async function predict(imageElement) {
                 const predictions = await model.predict(imageElement);
                 let herbalPlantFound = false;
+                let result = { plant: "Not a Herbal Plant", description: "" };
 
                 for (let i = 0; i < maxPredictions; i++) {
                     const className = predictions[i].className;
                     const probability = predictions[i].probability.toFixed(2);
 
-                    if (probability >= 0.5) { 
-                        labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
+                    if (probability >= 0.5) {
+                        result.plant = `${className} (${probability * 100}%)`;
                         herbalPlantFound = true;
-                        fetchDescription(className); 
+                        result.description = await fetchDescription(className);
                         break;
                     }
                 }
 
-                if (!herbalPlantFound) {
-                    labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
-                }
+                return result;
             }
 
             async function fetchDescription(plantName) {
                 const descriptionRef = database.ref('herbalPlants/' + plantName);
+                let description = "Description not found in database.";
 
-                descriptionRef.once('value').then((snapshot) => {
-                    const description = snapshot.val();
-                    if (description) {
-                        labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
-                    } else {
-                        labelContainer.childNodes[0].innerHTML += `<br>Description not found in database.`;
+                await descriptionRef.once('value').then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        description = data;
                     }
                 });
+
+                return description;
             }
 
-            async function captureImage() {
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            function receiveBase64Image(event) {
+                const base64Image = event.data;
 
-                video.style.display = 'none'; 
-                canvas.style.display = 'block'; 
+                if (base64Image.startsWith("data:image/")) {
+                    const img = new Image();
+                    img.src = base64Image;
 
-                await predict(canvas);
+                    img.onload = function () {
+                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        predict(canvas).then((result) => {
+                            const response = JSON.stringify(result);
+                            window.parent.postMessage(response, '*');
+                        });
+                    };
+                }
             }
+
+            // Listen for Base64 image from MIT App Inventor
+            window.addEventListener("message", receiveBase64Image, false);
 
             window.init = init;
-            window.captureImage = captureImage;
-        }
+        });
     </script>
 </body>
 </html>
