@@ -79,7 +79,7 @@
 
         const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
 
-        let model, webcam, labelContainer, maxPredictions;
+        let model, video, labelContainer, maxPredictions;
 
         async function init() {
             try {
@@ -89,25 +89,35 @@
                 model = await tmImage.load(modelURL, metadataURL);
                 maxPredictions = model.getTotalClasses();
 
-                const flip = false; // Flip set to false for mobile compatibility
-                webcam = new tmImage.Webcam(300, 300, flip);
-                await webcam.setup();
-                await webcam.play();
-                window.requestAnimationFrame(loop);
+                // Request access to the webcam
+                const constraints = { video: { width: 300, height: 300 } };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video = document.createElement("video");
 
-                document.getElementById("webcam-container").appendChild(webcam.canvas);
+                video.width = 300;
+                video.height = 300;
+                video.srcObject = stream;
+                video.play();
+
+                document.getElementById("webcam-container").appendChild(video);
+
                 labelContainer = document.getElementById("label-container");
                 labelContainer.appendChild(document.createElement("div"));
 
                 // Show the capture button once the webcam is ready
-                document.getElementById("capture-btn").style.display = "inline-block"; 
+                document.getElementById("capture-btn").style.display = "inline-block";
+
+                // Start the prediction loop
+                video.onloadedmetadata = () => {
+                    window.requestAnimationFrame(loop);
+                };
+
             } catch (error) {
                 console.error("Error initializing the webcam or model:", error);
             }
         }
 
         async function loop() {
-            webcam.update(); 
             window.requestAnimationFrame(loop);
         }
 
@@ -146,8 +156,9 @@
         }
 
         async function captureImage() {
-            const image = webcam.canvas;
+            const image = tf.browser.fromPixels(video);
             await predict(image);
+            image.dispose();
         }
     </script>
 </body>
