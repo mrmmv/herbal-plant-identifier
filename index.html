@@ -54,63 +54,121 @@
     <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
     <div id="label-container"></div>
 
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <!-- Firebase Realtime Database -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
+
+    <!-- TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <!-- Teachable Machine -->
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
     <script type="text/javascript">
-        const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
+        // Ensure Firebase is available after loading scripts
+        window.onload = function() {
+            // Your web app's Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
+                authDomain: "herby-21c6a.firebaseapp.com",
+                databaseURL: "https://herby-21c6a-default-rtdb.firebaseio.com",
+                projectId: "herby-21c6a",
+                storageBucket: "herby-21c6a.appspot.com",
+                messagingSenderId: "374602315706",
+                appId: "1:374602315706:web:1b948f85b8c1e6915c0f83"
+            };
 
-        let model, webcam, labelContainer, maxPredictions;
+            // Initialize Firebase
+            const app = firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
 
-        async function init() {
-            const modelURL = URL + "model.json";
-            const metadataURL = URL + "metadata.json";
+            const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
 
-            model = await tmImage.load(modelURL, metadataURL);
-            maxPredictions = model.getTotalClasses();
+            let model, video, labelContainer, maxPredictions;
 
-            // Flip set to false for mobile compatibility
-            const flip = false; 
-            webcam = new tmImage.Webcam(300, 300, flip); 
-            await webcam.setup();
-            await webcam.play();
-            window.requestAnimationFrame(loop);
+            async function init() {
+                try {
+                    const modelURL = URL + "model.json";
+                    const metadataURL = URL + "metadata.json";
 
-            document.getElementById("webcam-container").appendChild(webcam.canvas);
-            labelContainer = document.getElementById("label-container");
-            labelContainer.appendChild(document.createElement("div"));
+                    model = await tmImage.load(modelURL, metadataURL);
+                    maxPredictions = model.getTotalClasses();
 
-            // Show the capture button once the webcam is ready
-            document.getElementById("capture-btn").style.display = "inline-block"; 
-        }
+                    // Request access to the webcam
+                    const constraints = { video: { width: 300, height: 300 } };
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    video = document.createElement("video");
 
-        async function loop() {
-            webcam.update(); 
-            window.requestAnimationFrame(loop);
-        }
+                    video.width = 300;
+                    video.height = 300;
+                    video.srcObject = stream;
+                    video.play();
 
-        async function predict(image) {
-            const prediction = await model.predict(image);
-            let herbalPlantFound = false;
+                    document.getElementById("webcam-container").appendChild(video);
 
-            for (let i = 0; i < maxPredictions; i++) {
-                const className = prediction[i].className;
-                const probability = prediction[i].probability.toFixed(2);
+                    labelContainer = document.getElementById("label-container");
+                    labelContainer.appendChild(document.createElement("div"));
 
-                if (probability >= 0.5) { 
-                    labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
-                    herbalPlantFound = true;
-                    break;
+                    // Show the capture button once the webcam is ready
+                    document.getElementById("capture-btn").style.display = "inline-block";
+
+                    // Start the prediction loop
+                    video.onloadedmetadata = () => {
+                        window.requestAnimationFrame(loop);
+                    };
+
+                } catch (error) {
+                    console.error("Error initializing the webcam or model:", error);
                 }
             }
 
-            if (!herbalPlantFound) {
-                labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
+            async function loop() {
+                window.requestAnimationFrame(loop);
             }
-        }
 
-        async function captureImage() {
-            const image = webcam.canvas;
-            await predict(image);
+            async function predict(image) {
+                const prediction = await model.predict(image);
+                let herbalPlantFound = false;
+
+                for (let i = 0; i < maxPredictions; i++) {
+                    const className = prediction[i].className;
+                    const probability = prediction[i].probability.toFixed(2);
+
+                    if (probability >= 0.5) { 
+                        labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
+                        herbalPlantFound = true;
+                        fetchDescription(className); // Fetch description from Firebase
+                        break;
+                    }
+                }
+
+                if (!herbalPlantFound) {
+                    labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
+                }
+            }
+
+            async function fetchDescription(plantName) {
+                const descriptionRef = database.ref('herbalPlants/' + plantName);
+
+                descriptionRef.once('value').then((snapshot) => {
+                    const description = snapshot.val();
+                    if (description) {
+                        labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
+                    } else {
+                        labelContainer.childNodes[0].innerHTML += `<br>Description not found in database.`;
+                    }
+                });
+            }
+
+            async function captureImage() {
+                const image = tf.browser.fromPixels(video);
+                await predict(image);
+                image.dispose();
+            }
+
+            // Expose functions to global scope
+            window.init = init;
+            window.captureImage = captureImage;
         }
     </script>
 </body>
