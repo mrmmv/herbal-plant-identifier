@@ -13,6 +13,7 @@
             color: white;
             padding: 10px;
         }
+
         #webcam-container {
             margin: 20px auto;
             width: 80vw;
@@ -24,42 +25,21 @@
             overflow: hidden;
             position: relative;
         }
-        video, canvas {
+
+        canvas {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: none;
         }
+
         #label-container {
             margin-top: 20px;
             font-size: 4vw;
         }
-        button {
-            background-color: #3CB371;
-            border: none;
-            padding: 10px 20px;
-            font-size: 4vw;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        button:hover {
-            background-color: #2E8B57;
-        }
-        #capture-btn {
-            margin-top: 20px;
-            display: none;
-        }
+
         @media (min-width: 768px) {
-            #webcam-container {
-                width: 300px;
-                height: 300px;
-            }
             #label-container {
-                font-size: 18px;
-            }
-            button {
                 font-size: 18px;
             }
         }
@@ -83,7 +63,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
     <script type="text/javascript">
-        document.addEventListener("DOMContentLoaded", function () {
+        window.onload = function() {
             const firebaseConfig = {
                 apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
                 authDomain: "herby-21c6a.firebaseapp.com",
@@ -99,7 +79,7 @@
 
             const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
 
-            let model, maxPredictions, canvas, context;
+            let model, canvas, context, labelContainer;
 
             async function init() {
                 try {
@@ -107,11 +87,11 @@
                     const metadataURL = URL + "metadata.json";
 
                     model = await tmImage.load(modelURL, metadataURL);
-                    maxPredictions = model.getTotalClasses();
+                    labelContainer = document.getElementById("label-container");
+                    labelContainer.appendChild(document.createElement("div"));
 
                     canvas = document.getElementById("captured-image");
                     context = canvas.getContext('2d');
-
                 } catch (error) {
                     console.error("Error initializing the model:", error);
                 }
@@ -120,59 +100,60 @@
             async function predict(imageElement) {
                 const predictions = await model.predict(imageElement);
                 let herbalPlantFound = false;
-                let result = { plant: "Not a Herbal Plant", description: "" };
+                let result = "";
 
-                for (let i = 0; i < maxPredictions; i++) {
+                for (let i = 0; i < predictions.length; i++) {
                     const className = predictions[i].className;
                     const probability = predictions[i].probability.toFixed(2);
 
                     if (probability >= 0.5) {
-                        result.plant = `${className} (${probability * 100}%)`;
+                        result = `Identified: ${className} (${probability * 100}%)`;
                         herbalPlantFound = true;
-                        result.description = await fetchDescription(className);
+                        await fetchDescription(className, result);
                         break;
                     }
                 }
 
-                return result;
-            }
-
-            async function fetchDescription(plantName) {
-                const descriptionRef = database.ref('herbalPlants/' + plantName);
-                let description = "Description not found in database.";
-
-                await descriptionRef.once('value').then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        description = data;
-                    }
-                });
-
-                return description;
-            }
-
-            function receiveBase64Image(event) {
-                const base64Image = event.data;
-
-                if (base64Image.startsWith("data:image/")) {
-                    const img = new Image();
-                    img.src = base64Image;
-
-                    img.onload = function () {
-                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        predict(canvas).then((result) => {
-                            const response = JSON.stringify(result);
-                            window.parent.postMessage(response, '*');
-                        });
-                    };
+                if (!herbalPlantFound) {
+                    result = "Not a Herbal Plant";
+                    labelContainer.childNodes[0].innerHTML = result;
+                    sendToMITAppInventor(result);
                 }
             }
 
-            // Listen for Base64 image from MIT App Inventor
-            window.addEventListener("message", receiveBase64Image, false);
+            async function fetchDescription(plantName, result) {
+                const descriptionRef = database.ref('herbalPlants/' + plantName);
+
+                descriptionRef.once('value').then((snapshot) => {
+                    const description = snapshot.val();
+                    if (description) {
+                        result += `<br>Description: ${description}`;
+                    } else {
+                        result += "<br>Description not found in database.";
+                    }
+                    labelContainer.childNodes[0].innerHTML = result;
+                    sendToMITAppInventor(result);
+                });
+            }
+
+            function receiveImageFromMITAppInventor(base64Image) {
+                const image = new Image();
+                image.onload = async function() {
+                    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                    await predict(canvas);
+                };
+                image.src = `data:image/png;base64,${base64Image}`;
+            }
+
+            function sendToMITAppInventor(message) {
+                window.AppInventor.setWebViewString(message);
+            }
 
             window.init = init;
-        });
+            window.receiveImageFromMITAppInventor = receiveImageFromMITAppInventor;
+
+            init();
+        }
     </script>
 </body>
 </html>
