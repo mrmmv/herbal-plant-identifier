@@ -184,6 +184,23 @@
                 await predict(canvas);
             }
 
+            // Function to handle Base64 image from URL
+            async function handleBase64Image() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const base64String = urlParams.get('image');
+
+                if (base64String) {
+                    const img = document.createElement('img');
+                    img.src = 'data:image/jpeg;base64,' + base64String;
+                    img.onload = async () => {
+                        await predict(img);
+                    };
+                    document.getElementById('webcam-container').appendChild(img);
+                }
+            }
+
+            handleBase64Image();
+
             window.init = init;
             window.captureImage = captureImage;
         }
