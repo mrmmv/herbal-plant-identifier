@@ -147,7 +147,7 @@
                     const className = predictions[i].className;
                     const probability = predictions[i].probability.toFixed(2);
 
-                    if (probability >= 0.5) { 
+                    if (probability >= 0.95) { 
                         labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
                         herbalPlantFound = true;
                         fetchDescription(className); 
