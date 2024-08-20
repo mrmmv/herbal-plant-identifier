@@ -185,13 +185,13 @@
 
     <script type="text/javascript">
         const firebaseConfig = {
-             apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
-            authDomain: "herby-21c6a.firebaseapp.com",
-            databaseURL: "https://herby-21c6a-default-rtdb.firebaseio.com",
-            projectId: "herby-21c6a",
-            storageBucket: "herby-21c6a.appspot.com",
-            messagingSenderId: "374602315706",
-            appId: "1:374602315706:web:1b948f85b8c1e6915c0f83"
+            apiKey: "your-firebase-api-key",
+            authDomain: "your-firebase-auth-domain",
+            databaseURL: "your-firebase-database-url",
+            projectId: "your-firebase-project-id",
+            storageBucket: "your-firebase-storage-bucket",
+            messagingSenderId: "your-firebase-messaging-sender-id",
+            appId: "your-firebase-app-id"
         };
 
         const app = firebase.initializeApp(firebaseConfig);
@@ -276,90 +276,88 @@
 
                 if (probability >= 0.95) {
                     labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
+
+                    // Fetch health benefits from Firebase
+                    const query = database.ref('herbal_medicine').orderByChild('name').equalTo(className);
+                    query.once('value', (snapshot) => {
+                        if (snapshot.exists()) {
+                            snapshot.forEach((data) => {
+                                const healthBenefits = data.val().benefits;
+                                labelContainer.childNodes[0].innerHTML += `<br>Health Benefits: ${healthBenefits}`;
+                            });
+                        } else {
+                            labelContainer.childNodes[0].innerHTML += `<br>Health Benefits: Not found in the database.`;
+                        }
+                    });
+
                     herbalPlantFound = true;
-                    fetchDescription(className);
                     break;
                 }
             }
 
             if (!herbalPlantFound) {
-                labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
+                labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant.";
             }
         }
 
-        async function fetchDescription(plantName) {
-            const descriptionRef = database.ref('herbalPlants/' + plantName);
-
-            descriptionRef.once('value').then((snapshot) => {
-                const description = snapshot.val();
-                if (description) {
-                    labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
-                } else {
-                    labelContainer.childNodes[0].innerHTML += `<br>Description not found in database.`;
-                }
-            });
+        function captureImage() {
+            if (!video) return;
+            predict(video);
         }
 
-        async function captureImage() {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            const imgElement = new Image();
-            imgElement.src = canvas.toDataURL();
-            imgElement.style.width = '50%';
-            imgElement.style.marginTop = '20px';
-
-            labelContainer.innerHTML = '';
-            labelContainer.appendChild(imgElement);
-
-            await predict(canvas);
+        function sendMessage() {
+            const userInput = document.getElementById('user-input').value.trim();
+            if (userInput) {
+                addUserMessage(userInput);
+                const symptomKeywords = analyzeSymptoms(userInput);
+                findHerbalRemedy(symptomKeywords);
+            }
         }
 
-        async function sendMessage() {
-            const userInput = document.getElementById('user-input').value;
-            if (userInput.trim() === '') return;
-
+        function addUserMessage(message) {
             const chatbox = document.getElementById('chatbox');
-            const userMessage = `<div class="user-message">You: ${userInput}</div>`;
-            chatbox.innerHTML += userMessage;
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.classList.add('user-message');
+            userMessageDiv.innerText = message;
+            chatbox.appendChild(userMessageDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
 
-            const symptomRef = database.ref('herbalPlants');
-            symptomRef.once('value').then((snapshot) => {
-                const plants = snapshot.val();
-                let foundResponse = false;
+        function addBotMessage(message) {
+            const chatbox = document.getElementById('chatbox');
+            const botMessageDiv = document.createElement('div');
+            botMessageDiv.classList.add('bot-message');
+            botMessageDiv.innerHTML = message;
+            chatbox.appendChild(botMessageDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
 
-                for (const plant in plants) {
-                    if (plants[plant].symptoms && plants[plant].symptoms.toLowerCase().includes(userInput.toLowerCase())) {
-                        const botMessage = `<div class="bot-message">Herby: ${plants[plant].name} can help with ${userInput}. ${plants[plant].description}</div>`;
-                        chatbox.innerHTML += botMessage;
-                        foundResponse = true;
-                        break;
+        function analyzeSymptoms(userInput) {
+            const keywords = ['fever', 'cough', 'headache', 'stomachache', 'pain', 'cold'];
+            const foundKeywords = keywords.filter(keyword => userInput.toLowerCase().includes(keyword));
+            return foundKeywords;
+        }
+
+        function findHerbalRemedy(symptomKeywords) {
+            if (symptomKeywords.length > 0) {
+                const query = database.ref('herbal_medicine');
+                query.once('value', (snapshot) => {
+                    let remedyFound = false;
+                    snapshot.forEach((data) => {
+                        const symptoms = data.val().symptoms || [];
+                        if (symptoms.some(symptom => symptomKeywords.includes(symptom))) {
+                            addBotMessage(`For ${symptomKeywords.join(', ')}, you can try ${data.val().name}. Benefits: ${data.val().benefits}`);
+                            remedyFound = true;
+                        }
+                    });
+                    if (!remedyFound) {
+                        addBotMessage("Sorry, I couldn't find a remedy for those symptoms.");
                     }
-                }
-
-                if (!foundResponse) {
-                    chatbox.innerHTML += `<div class="bot-message">Herby: I'm sorry, I couldn't find a herbal plant for that symptom.</div>`;
-                }
-
-                document.getElementById('user-input').value = '';
-                chatbox.scrollTop = chatbox.scrollHeight;
-            });
+                });
+            } else {
+                addBotMessage("Please describe your symptoms in more detail.");
+            }
         }
-
-        function loadTermsAndConditions() {
-            const termsRef = database.ref('termsAndConditions');
-            termsRef.once('value').then((snapshot) => {
-                const terms = snapshot.val();
-                document.getElementById('terms-content').innerHTML = terms || "No terms and conditions found.";
-            });
-        }
-
-        showPage('main-page');
-        loadTermsAndConditions();
     </script>
 </body>
 
