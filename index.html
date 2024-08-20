@@ -8,114 +8,58 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
+            text-align: center;
             background: linear-gradient(to right, #2E8B57, #3CB371);
             color: white;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .header {
-            background-color: #2E8B57;
             padding: 10px;
-            text-align: center;
-            color: white;
+            overflow: hidden;
+            position: relative;
+        }
+
+        h1 {
             font-size: 5vw;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease-in-out;
         }
 
-        .chatbox, .scanner-page, .terms-page {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        .chatbox {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message {
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        .user-message {
-            background-color: #3CB371;
-            align-self: flex-end;
-            color: white;
-        }
-
-        .bot-message {
-            background-color: #f0f0f0;
-            align-self: flex-start;
-            color: black;
-        }
-
-        .input-container {
-            display: flex;
-            padding: 10px;
-            background-color: #2E8B57;
-        }
-
-        .input-container input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-            margin-right: 10px;
-        }
-
-        .input-container button {
-            padding: 10px;
-            border: none;
-            background-color: #3CB371;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .scanner-page, .terms-page {
-            display: none;
-            padding: 20px;
-        }
-
-        .scanner-page button, .back-button {
+        button {
             background-color: #3CB371;
             border: none;
-            padding: 10px;
+            padding: 10px 20px;
             font-size: 4vw;
             color: white;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.3s ease;
-            margin: 10px 0;
-            width: 100%;
+            margin: 10px;
+            width: 80%;
+        }
+
+        button:hover {
+            background-color: #2E8B57;
+            transform: scale(1.1);
+        }
+
+        #main-page, #chatbot-page, #scanner-page, #terms-page {
+            display: none;
+            transition: opacity 0.5s ease;
         }
 
         #webcam-container {
             margin: 20px auto;
-            width: 100%;
+            width: 80vw;
+            height: 80vw;
             max-width: 250px;
             max-height: 250px;
             border: 5px solid #fff;
             border-radius: 10px;
             overflow: hidden;
             background: #fff;
+        }
+
+        #label-container {
+            margin-top: 20px;
+            font-size: 4vw;
         }
 
         img.captured-image {
@@ -126,66 +70,102 @@
             margin-top: 10px;
         }
 
-        #label-container {
-            margin-top: 20px;
-            font-size: 4vw;
-            text-align: center;
+        .animated-plant {
+            position: absolute;
+            width: 100px;
+            animation: float 6s ease-in-out infinite;
         }
 
-        .back-button {
-            background-color: #f44336;
-            color: white;
+        #plant1 {
+            top: 10%;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        #plant2 {
+            bottom: 20%;
+            right: -100px;
+            animation-delay: 2s;
+        }
+
+        #plant3 {
+            bottom: 10%;
+            left: -100px;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+            100% {
+                transform: translateY(0);
+            }
         }
 
         @media (min-width: 768px) {
-            .header {
+            h1 {
                 font-size: 24px;
             }
 
-            .scanner-page button {
+            button {
                 font-size: 18px;
+            }
+
+            #webcam-container {
+                width: 250px;
+                height: 250px;
             }
 
             #label-container {
                 font-size: 18px;
             }
         }
+
+        .back-button {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">Detector Application</div>
-
-        <div id="main-page" class="scanner-page">
-            <button onclick="showPage('chatbot-page')">Chatbot</button>
-            <button onclick="showPage('scanner-page')">Scanner</button>
-            <button onclick="showPage('terms-page')">Terms and Conditions</button>
-        </div>
-
-        <div id="chatbot-page" class="chatbox">
-            <div id="chatbox-messages">
-                <div class="message bot-message">Hi, I'm Herby! How can I help you?</div>
-            </div>
-            <div class="input-container">
-                <input type="text" id="user-input" placeholder="Describe your symptoms...">
-                <button onclick="sendMessage()">Send</button>
-                <button class="back-button" onclick="showPage('main-page')">Back</button>
-            </div>
-        </div>
-
-        <div id="scanner-page" class="scanner-page">
-            <button type="button" onclick="init()">Start Scanner</button>
-            <div id="webcam-container"></div>
-            <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
-            <div id="label-container"></div>
-            <button class="back-button" onclick="showPage('main-page')">Back</button>
-        </div>
-
-        <div id="terms-page" class="terms-page">
-            <div id="terms-content"></div>
-            <button class="back-button" onclick="showPage('main-page')">Back</button>
-        </div>
+    <div id="main-page">
+        <h1>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</h1>
+        <button onclick="showPage('chatbot-page')">Chatbot</button>
+        <button onclick="showPage('scanner-page')">Scanner</button>
+        <button onclick="showPage('terms-page')">Terms and Conditions</button>
     </div>
+
+    <div id="chatbot-page">
+        <h1>Chat with Herby</h1>
+        <div id="chatbox">
+            <p>Hi, I'm Herby! How can I help you?</p>
+        </div>
+        <input type="text" id="user-input" placeholder="Describe your symptoms...">
+        <button onclick="sendMessage()">Send</button>
+        <button class="back-button" onclick="showPage('main-page')">Back</button>
+    </div>
+
+    <div id="scanner-page">
+        <h1>Herbal Plant Identifier</h1>
+        <button type="button" onclick="init()">Start Scanner</button>
+        <div id="webcam-container"></div>
+        <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
+        <div id="label-container"></div>
+        <button class="back-button" onclick="showPage('main-page')">Back</button>
+    </div>
+
+    <div id="terms-page">
+        <h1>Terms and Conditions</h1>
+        <div id="terms-content"></div>
+        <button class="back-button" onclick="showPage('main-page')">Back</button>
+    </div>
+
+    <img id="plant1" class="animated-plant" src="plant1.png" alt="Animated Plant">
+    <img id="plant2" class="animated-plant" src="plant2.png" alt="Animated Plant">
+    <img id="plant3" class="animated-plant" src="plant3.png" alt="Animated Plant">
 
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -239,11 +219,9 @@
                 video.srcObject = stream;
                 video.play();
 
-                document.getElementById("webcam-container").innerHTML = ''; // Clear previous content
                 document.getElementById("webcam-container").appendChild(video);
 
                 labelContainer = document.getElementById("label-container");
-                labelContainer.innerHTML = ''; // Clear previous prediction
                 labelContainer.appendChild(document.createElement("div"));
 
                 document.getElementById("capture-btn").style.display = "inline-block";
@@ -277,57 +255,77 @@
         async function fetchDescription(plantName) {
             const descriptionRef = database.ref('herbalPlants/' + plantName);
 
-            descriptionRef.once('value').then(snapshot => {
+            descriptionRef.once('value').then((snapshot) => {
                 const description = snapshot.val();
                 if (description) {
-                    labelContainer.childNodes[0].innerHTML += `<br><br>Description: ${description}`;
+                    labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
                 } else {
-                    labelContainer.childNodes[0].innerHTML += `<br><br>No description found.`;
+                    labelContainer.childNodes[0].innerHTML += "<br>Description not found in database.";
                 }
-            }).catch(error => {
-                console.error("Error fetching description:", error);
             });
         }
 
         async function captureImage() {
-            const canvas = document.createElement("canvas");
+            const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            const imageElement = new Image();
-            imageElement.src = canvas.toDataURL("image/png");
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            const webcamContainer = document.getElementById("webcam-container");
-            webcamContainer.innerHTML = ''; // Clear previous image
-            webcamContainer.appendChild(imageElement);
+            // Display the captured image
+            const imageContainer = document.createElement('div');
+            const imgElement = document.createElement('img');
+            imgElement.src = canvas.toDataURL('image/png');
+            imgElement.className = 'captured-image';
+            imageContainer.appendChild(imgElement);
 
-            await predict(imageElement);
+            document.getElementById('webcam-container').innerHTML = ''; // Clear the webcam
+            document.getElementById('webcam-container').appendChild(imageContainer); // Show captured image
+
+            await predict(canvas); // Perform the prediction
         }
 
-        function sendMessage() {
-            const userInput = document.getElementById('user-input').value.trim();
-            if (userInput) {
-                const chatboxMessages = document.getElementById('chatbox-messages');
-                const userMessage = document.createElement('div');
-                userMessage.className = 'message user-message';
-                userMessage.innerHTML = userInput;
-                chatboxMessages.appendChild(userMessage);
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            if (userInput.trim() === '') return;
+
+            const chatbox = document.getElementById('chatbox');
+            const userMessage = `<p>You: ${userInput}</p>`;
+            chatbox.innerHTML += userMessage;
+
+            const symptomRef = database.ref('herbalPlants');
+            symptomRef.once('value').then((snapshot) => {
+                const plants = snapshot.val();
+                let foundResponse = false;
+
+                for (const plant in plants) {
+                    if (plants[plant].symptoms && plants[plant].symptoms.toLowerCase().includes(userInput.toLowerCase())) {
+                        const botMessage = `<p>Herby: ${plants[plant].name} can help with ${userInput}. ${plants[plant].description}</p>`;
+                        chatbox.innerHTML += botMessage;
+                        foundResponse = true;
+                        break;
+                    }
+                }
+
+                if (!foundResponse) {
+                    chatbox.innerHTML += "<p>Herby: I'm sorry, I couldn't find a herbal plant for that symptom.</p>";
+                }
 
                 document.getElementById('user-input').value = '';
-                chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
-
-                // Handle the bot response
-                const botResponse = `I am processing your input: "${userInput}"...`;
-                const botMessage = document.createElement('div');
-                botMessage.className = 'message bot-message';
-                botMessage.innerHTML = botResponse;
-                chatboxMessages.appendChild(botMessage);
-                chatboxMessages.scrollTop = chatboxMessages.scrollHeight;
-
-                // Here you would typically send the userInput to Firebase to get the actual response
-            }
+            });
         }
+
+        function loadTermsAndConditions() {
+            const termsRef = database.ref('termsAndConditions');
+            termsRef.once('value').then((snapshot) => {
+                const terms = snapshot.val();
+                document.getElementById('terms-content').innerHTML = terms || "No terms and conditions found.";
+            });
+        }
+
+        showPage('main-page');
+        loadTermsAndConditions();
     </script>
 </body>
 </html>
