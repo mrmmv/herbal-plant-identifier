@@ -60,6 +60,7 @@
         #label-container {
             margin-top: 20px;
             font-size: 4vw;
+            color: white;
         }
 
         img.captured-image {
@@ -193,10 +194,10 @@
 
     <div id="scanner-page">
         <h1>Herbal Plant Identifier</h1>
-        <button type="button" onclick="init()">Start Scanner</button>
+        <button id="start-scanner-btn" type="button" onclick="init()">Start Scanner</button>
         <div id="webcam-container"></div>
         <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
-        <button id="rescan-btn" type="button" onclick="init()">Rescan</button>
+        <button id="rescan-btn" type="button" onclick="rescan()" style="display: none;">Rescan</button>
         <div id="label-container"></div>
         <button class="back-button" onclick="showPage('main-page')">Back</button>
     </div>
@@ -263,12 +264,15 @@
                 video.srcObject = stream;
                 video.play();
 
+                document.getElementById("webcam-container").innerHTML = '';  // Clear the previous content
                 document.getElementById("webcam-container").appendChild(video);
 
                 labelContainer = document.getElementById("label-container");
-                labelContainer.appendChild(document.createElement("div"));
+                labelContainer.innerHTML = '';  // Clear the previous content
 
                 document.getElementById("capture-btn").style.display = "block";
+                document.getElementById("start-scanner-btn").style.display = "none";
+                document.getElementById("rescan-btn").style.display = "none";
             } catch (error) {
                 console.error(error);
             }
@@ -298,6 +302,13 @@
 
             document.getElementById("capture-btn").style.display = "none";
             document.getElementById("rescan-btn").style.display = "block";
+        }
+
+        function rescan() {
+            video.play();
+            document.getElementById("capture-btn").style.display = "block";
+            document.getElementById("rescan-btn").style.display = "none";
+            document.getElementById("label-container").innerText = '';
         }
 
         function sendMessage() {
