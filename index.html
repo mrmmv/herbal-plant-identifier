@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,14 +13,11 @@
             background: linear-gradient(to right, #2E8B57, #3CB371);
             color: white;
             padding: 10px;
-            overflow: hidden;
-            position: relative;
         }
 
         h1 {
             font-size: 5vw;
             margin-bottom: 20px;
-            transition: transform 0.3s ease-in-out;
         }
 
         button {
@@ -37,73 +35,30 @@
 
         button:hover {
             background-color: #2E8B57;
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
 
-        #main-page, #chatbot-page, #scanner-page, #terms-page {
+        #main-page,
+        #chatbot-page,
+        #scanner-page,
+        #terms-page {
             display: none;
-            transition: opacity 0.5s ease;
         }
 
         #webcam-container {
             margin: 20px auto;
             width: 80vw;
             height: 80vw;
-            max-width: 250px;
-            max-height: 250px;
+            max-width: 300px;
+            max-height: 300px;
             border: 5px solid #fff;
             border-radius: 10px;
             overflow: hidden;
-            background: #fff;
         }
 
         #label-container {
             margin-top: 20px;
             font-size: 4vw;
-        }
-
-        img.captured-image {
-            width: 100%;
-            height: auto;
-            display: block;
-            border-radius: 10px;
-            margin-top: 10px;
-        }
-
-        .animated-plant {
-            position: absolute;
-            width: 100px;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        #plant1 {
-            top: 10%;
-            left: -100px;
-            animation-delay: 0s;
-        }
-
-        #plant2 {
-            bottom: 20%;
-            right: -100px;
-            animation-delay: 2s;
-        }
-
-        #plant3 {
-            bottom: 10%;
-            left: -100px;
-            animation-delay: 4s;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-20px);
-            }
-            100% {
-                transform: translateY(0);
-            }
         }
 
         @media (min-width: 768px) {
@@ -116,8 +71,8 @@
             }
 
             #webcam-container {
-                width: 250px;
-                height: 250px;
+                width: 300px;
+                height: 300px;
             }
 
             #label-container {
@@ -128,8 +83,61 @@
         .back-button {
             margin-top: 20px;
         }
+
+        /* Chatbot Design */
+        #chatbox {
+            height: 60vh;
+            overflow-y: auto;
+            background-color: #fff;
+            color: #333;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .user-message,
+        .bot-message {
+            margin: 10px;
+            padding: 10px;
+            border-radius: 15px;
+            max-width: 80%;
+            clear: both;
+        }
+
+        .user-message {
+            background-color: #3CB371;
+            color: white;
+            float: right;
+        }
+
+        .bot-message {
+            background-color: #f1f1f1;
+            color: #333;
+            float: left;
+        }
+
+        #user-input {
+            width: 80%;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+
+        #chat-input-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #chat-input-container button {
+            width: 15%;
+            margin-left: 10px;
+        }
     </style>
 </head>
+
 <body>
     <div id="main-page">
         <h1>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</h1>
@@ -141,11 +149,13 @@
     <div id="chatbot-page">
         <h1>Chat with Herby</h1>
         <div id="chatbox">
-            <p>Hi, I'm Herby! How can I help you?</p>
+            <div class="bot-message">Hi, I'm Herby! How can I help you?</div>
         </div>
-        <input type="text" id="user-input" placeholder="Describe your symptoms...">
-        <button onclick="sendMessage()">Send</button>
-        <button class="back-button" onclick="showPage('main-page')">Back</button>
+        <div id="chat-input-container">
+            <input type="text" id="user-input" placeholder="Describe your symptoms...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <button class="back-button" onclick="showPage('main-page', true)">Back</button>
     </div>
 
     <div id="scanner-page">
@@ -154,18 +164,14 @@
         <div id="webcam-container"></div>
         <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
         <div id="label-container"></div>
-        <button class="back-button" onclick="showPage('main-page')">Back</button>
+        <button class="back-button" onclick="showPage('main-page', true)">Back</button>
     </div>
 
     <div id="terms-page">
         <h1>Terms and Conditions</h1>
         <div id="terms-content"></div>
-        <button class="back-button" onclick="showPage('main-page')">Back</button>
+        <button class="back-button" onclick="showPage('main-page', true)">Back</button>
     </div>
-
-    <img id="plant1" class="animated-plant" src="plant1.png" alt="Animated Plant">
-    <img id="plant2" class="animated-plant" src="plant2.png" alt="Animated Plant">
-    <img id="plant3" class="animated-plant" src="plant3.png" alt="Animated Plant">
 
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -179,7 +185,7 @@
 
     <script type="text/javascript">
         const firebaseConfig = {
-           apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
+             apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
             authDomain: "herby-21c6a.firebaseapp.com",
             databaseURL: "https://herby-21c6a-default-rtdb.firebaseio.com",
             projectId: "herby-21c6a",
@@ -195,11 +201,26 @@
 
         let model, video, labelContainer, maxPredictions;
 
-        function showPage(pageId) {
-            const pages = ["main-page", "chatbot-page", "scanner-page", "terms-page"];
-            pages.forEach(page => {
-                document.getElementById(page).style.display = (page === pageId) ? "block" : "none";
-            });
+        function showPage(pageId, reset = false) {
+            if (reset) {
+                resetPages();
+            }
+            document.getElementById("main-page").style.display = "none";
+            document.getElementById("chatbot-page").style.display = "none";
+            document.getElementById("scanner-page").style.display = "none";
+            document.getElementById("terms-page").style.display = "none";
+            document.getElementById(pageId).style.display = "block";
+        }
+
+        function resetPages() {
+            document.getElementById('chatbox').innerHTML = '<div class="bot-message">Hi, I\'m Herby! How can I help you?</div>';
+            document.getElementById('user-input').value = '';
+            document.getElementById('label-container').innerHTML = '';
+            const webcamContainer = document.getElementById("webcam-container");
+            while (webcamContainer.firstChild) {
+                webcamContainer.removeChild(webcamContainer.firstChild);
+            }
+            document.getElementById("capture-btn").style.display = "none";
         }
 
         async function init() {
@@ -210,12 +231,18 @@
                 model = await tmImage.load(modelURL, metadataURL);
                 maxPredictions = model.getTotalClasses();
 
-                const constraints = { video: { facingMode: { exact: "environment" }, width: 250, height: 250 } };
+                const constraints = {
+                    video: {
+                        facingMode: { exact: "environment" },
+                        width: 300,
+                        height: 300
+                    }
+                };
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video = document.createElement("video");
 
-                video.width = 250;
-                video.height = 250;
+                video.width = 300;
+                video.height = 300;
                 video.srcObject = stream;
                 video.play();
 
@@ -226,9 +253,17 @@
 
                 document.getElementById("capture-btn").style.display = "inline-block";
 
+                video.onloadedmetadata = () => {
+                    window.requestAnimationFrame(loop);
+                };
+
             } catch (error) {
                 console.error("Error initializing the webcam or model:", error);
             }
+        }
+
+        async function loop() {
+            window.requestAnimationFrame(loop);
         }
 
         async function predict(imageElement) {
@@ -260,7 +295,7 @@
                 if (description) {
                     labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
                 } else {
-                    labelContainer.childNodes[0].innerHTML += "<br>Description not found in database.";
+                    labelContainer.childNodes[0].innerHTML += `<br>Description not found in database.`;
                 }
             });
         }
@@ -273,17 +308,15 @@
             const context = canvas.getContext('2d');
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Display the captured image
-            const imageContainer = document.createElement('div');
-            const imgElement = document.createElement('img');
-            imgElement.src = canvas.toDataURL('image/png');
-            imgElement.className = 'captured-image';
-            imageContainer.appendChild(imgElement);
+            const imgElement = new Image();
+            imgElement.src = canvas.toDataURL();
+            imgElement.style.width = '50%';
+            imgElement.style.marginTop = '20px';
 
-            document.getElementById('webcam-container').innerHTML = ''; // Clear the webcam
-            document.getElementById('webcam-container').appendChild(imageContainer); // Show captured image
+            labelContainer.innerHTML = '';
+            labelContainer.appendChild(imgElement);
 
-            await predict(canvas); // Perform the prediction
+            await predict(canvas);
         }
 
         async function sendMessage() {
@@ -291,7 +324,7 @@
             if (userInput.trim() === '') return;
 
             const chatbox = document.getElementById('chatbox');
-            const userMessage = `<p>You: ${userInput}</p>`;
+            const userMessage = `<div class="user-message">You: ${userInput}</div>`;
             chatbox.innerHTML += userMessage;
 
             const symptomRef = database.ref('herbalPlants');
@@ -301,7 +334,7 @@
 
                 for (const plant in plants) {
                     if (plants[plant].symptoms && plants[plant].symptoms.toLowerCase().includes(userInput.toLowerCase())) {
-                        const botMessage = `<p>Herby: ${plants[plant].name} can help with ${userInput}. ${plants[plant].description}</p>`;
+                        const botMessage = `<div class="bot-message">Herby: ${plants[plant].name} can help with ${userInput}. ${plants[plant].description}</div>`;
                         chatbox.innerHTML += botMessage;
                         foundResponse = true;
                         break;
@@ -309,10 +342,11 @@
                 }
 
                 if (!foundResponse) {
-                    chatbox.innerHTML += "<p>Herby: I'm sorry, I couldn't find a herbal plant for that symptom.</p>";
+                    chatbox.innerHTML += `<div class="bot-message">Herby: I'm sorry, I couldn't find a herbal plant for that symptom.</div>`;
                 }
 
                 document.getElementById('user-input').value = '';
+                chatbox.scrollTop = chatbox.scrollHeight;
             });
         }
 
@@ -328,4 +362,5 @@
         loadTermsAndConditions();
     </script>
 </body>
+
 </html>
