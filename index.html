@@ -128,13 +128,69 @@
         .back-button {
             margin-top: 20px;
         }
+
+        /* Chatbot styling to resemble Messenger */
+        #chatbox {
+            border-radius: 10px;
+            border: 2px solid #fff;
+            background-color: #fff;
+            color: #333;
+            padding: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+            max-height: 60vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        #chatbox p {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 20px;
+            clear: both;
+        }
+
+        #chatbox p:nth-child(odd) {
+            background-color: #DCF8C6;
+            float: left;
+        }
+
+        #chatbox p:nth-child(even) {
+            background-color: #3CB371;
+            color: #fff;
+            float: right;
+        }
+
+        #user-input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 2px solid #fff;
+            border-radius: 20px;
+            margin-top: 10px;
+        }
+
+        #chatbot-page button {
+            margin-top: 10px;
+            background-color: #3CB371;
+            color: white;
+            border-radius: 20px;
+            border: none;
+            padding: 10px;
+            width: 80%;
+            cursor: pointer;
+            font-size: 4vw;
+        }
+
+        #chatbot-page button:hover {
+            background-color: #2E8B57;
+        }
     </style>
 </head>
 <body>
     <div id="main-page">
         <h1>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</h1>
         <button onclick="showPage('chatbot-page')">Chatbot</button>
-        <button onclick="showPage('scanner-page')">Scanner</button>
+        <button id="start-scanner-btn" onclick="showPage('scanner-page'); initScanner();">Scanner</button>
         <button onclick="showPage('terms-page')">Terms and Conditions</button>
     </div>
 
@@ -150,11 +206,10 @@
 
     <div id="scanner-page">
         <h1>Herbal Plant Identifier</h1>
-        <button type="button" onclick="init()">Start Scanner</button>
         <div id="webcam-container"></div>
-        <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
+        <button id="capture-btn" style="display: none;" type="button" onclick="captureImage()">Capture Image</button>
         <div id="label-container"></div>
-        <button class="back-button" onclick="showPage('main-page')">Back</button>
+        <button id="back-btn" class="back-button" style="display: none;" onclick="resetScanner()">Back</button>
     </div>
 
     <div id="terms-page">
@@ -179,7 +234,7 @@
 
     <script type="text/javascript">
         const firebaseConfig = {
-             apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
+            apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
             authDomain: "herby-21c6a.firebaseapp.com",
             databaseURL: "https://herby-21c6a-default-rtdb.firebaseio.com",
             projectId: "herby-21c6a",
@@ -202,7 +257,7 @@
             });
         }
 
-        async function init() {
+        async function initScanner() {
             try {
                 const modelURL = URL + "model.json";
                 const metadataURL = URL + "metadata.json";
@@ -219,113 +274,90 @@
                 video.srcObject = stream;
                 video.play();
 
-                document.getElementById("webcam-container").appendChild(video);
+                const webcamContainer = document.getElementById("webcam-container");
+                webcamContainer.innerHTML = '';
+                webcamContainer.appendChild(video);
 
-                labelContainer = document.getElementById("label-container");
-                labelContainer.appendChild(document.createElement("div"));
-
+                document.getElementById("start-scanner-btn").style.display = "none";
                 document.getElementById("capture-btn").style.display = "inline-block";
+                document.getElementById("back-btn").style.display = "inline-block";
 
             } catch (error) {
-                console.error("Error initializing the webcam or model:", error);
+                console.error("Error initializing scanner:", error);
             }
         }
 
-        async function predict(imageElement) {
-            const predictions = await model.predict(imageElement);
-            let herbalPlantFound = false;
-
-            for (let i = 0; i < maxPredictions; i++) {
-                const className = predictions[i].className;
-                const probability = predictions[i].probability.toFixed(2);
-
-                if (probability >= 0.95) {
-                    labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
-                    herbalPlantFound = true;
-                    fetchDescription(className);
-                    break;
-                }
-            }
-
-            if (!herbalPlantFound) {
-                labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
-            }
-        }
-
-        async function fetchDescription(plantName) {
-            const descriptionRef = database.ref('herbalPlants/' + plantName);
-
-            descriptionRef.once('value').then((snapshot) => {
-                const description = snapshot.val();
-                if (description) {
-                    labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
-                } else {
-                    labelContainer.childNodes[0].innerHTML += "<br>Description not found in database.";
-                }
-            });
+        function resetScanner() {
+            video.srcObject.getTracks().forEach(track => track.stop());
+            document.getElementById("webcam-container").innerHTML = '';
+            document.getElementById("capture-btn").style.display = "none";
+            document.getElementById("back-btn").style.display = "none";
+            document.getElementById("start-scanner-btn").style.display = "inline-block";
+            showPage('main-page');
         }
 
         async function captureImage() {
-            const canvas = document.createElement('canvas');
+            const canvas = document.createElement("canvas");
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Display the captured image
-            const imageContainer = document.createElement('div');
-            const imgElement = document.createElement('img');
-            imgElement.src = canvas.toDataURL('image/png');
-            imgElement.className = 'captured-image';
-            imageContainer.appendChild(imgElement);
-
-            document.getElementById('webcam-container').innerHTML = ''; // Clear the webcam
-            document.getElementById('webcam-container').appendChild(imageContainer); // Show captured image
-
-            await predict(canvas); // Perform the prediction
+            const image = canvas.toDataURL("image/png");
+            predict(image);
         }
 
-        async function sendMessage() {
-            const userInput = document.getElementById('user-input').value;
-            if (userInput.trim() === '') return;
+        async function predict(imageData) {
+            const img = new Image();
+            img.src = imageData;
 
-            const chatbox = document.getElementById('chatbox');
-            const userMessage = `<p>You: ${userInput}</p>`;
-            chatbox.innerHTML += userMessage;
+            const prediction = await model.predict(img);
+            prediction.sort((a, b) => b.probability - a.probability);
+            const highestPrediction = prediction[0];
 
-            const symptomRef = database.ref('herbalPlants');
-            symptomRef.once('value').then((snapshot) => {
-                const plants = snapshot.val();
-                let foundResponse = false;
+            if (highestPrediction.probability > 0.9) {
+                const plantName = highestPrediction.className;
+                fetchPlantDetails(plantName);
+            } else {
+                document.getElementById("label-container").innerHTML = "Not a herbal Plant.";
+            }
+        }
 
-                for (const plant in plants) {
-                    if (plants[plant].symptoms && plants[plant].symptoms.toLowerCase().includes(userInput.toLowerCase())) {
-                        const botMessage = `<p>Herby: ${plants[plant].name} can help with ${userInput}. ${plants[plant].description}</p>`;
-                        chatbox.innerHTML += botMessage;
-                        foundResponse = true;
-                        break;
-                    }
+        function fetchPlantDetails(plantName) {
+            const plantRef = database.ref('plants/' + plantName);
+
+            plantRef.once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const plantData = snapshot.val();
+                    document.getElementById("label-container").innerHTML = `
+                        <strong>${plantData.name}</strong><br>
+                        ${plantData.description}
+                    `;
+                } else {
+                    document.getElementById("label-container").innerHTML = "Details not found.";
                 }
-
-                if (!foundResponse) {
-                    chatbox.innerHTML += "<p>Herby: I'm sorry, I couldn't find a herbal plant for that symptom.</p>";
-                }
-
-                document.getElementById('user-input').value = '';
+            }).catch((error) => {
+                console.error("Error fetching plant details:", error);
             });
         }
 
-        function loadTermsAndConditions() {
-            const termsRef = database.ref('termsAndConditions');
-            termsRef.once('value').then((snapshot) => {
-                const terms = snapshot.val();
-                document.getElementById('terms-content').innerHTML = terms || "No terms and conditions found.";
-            });
-        }
+        function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            const chatbox = document.getElementById("chatbox");
 
-        showPage('main-page');
-        loadTermsAndConditions();
+            if (userInput.trim() === "") return;
+
+            const userMessage = document.createElement("p");
+            userMessage.innerText = userInput;
+            chatbox.appendChild(userMessage);
+
+            const botResponse = document.createElement("p");
+            botResponse.innerText = "I'm sorry, I'm still learning. Please describe your symptoms more clearly.";
+            chatbox.appendChild(botResponse);
+
+            document.getElementById("user-input").value = "";
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
     </script>
 </body>
 </html>
