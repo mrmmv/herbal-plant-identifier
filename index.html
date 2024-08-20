@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Herbal Plant Identifier</title>
+    <title>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</title>
     <style>
         body {
             margin: 0;
@@ -12,6 +12,32 @@
             background: linear-gradient(to right, #2E8B57, #3CB371);
             color: white;
             padding: 10px;
+        }
+
+        h1 {
+            font-size: 5vw;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #3CB371;
+            border: none;
+            padding: 10px 20px;
+            font-size: 4vw;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 10px;
+            width: 80%;
+        }
+
+        button:hover {
+            background-color: #2E8B57;
+        }
+
+        #main-page, #chatbot-page, #scanner-page, #terms-page {
+            display: none;
         }
 
         #webcam-container {
@@ -30,27 +56,15 @@
             font-size: 4vw;
         }
 
-        button {
-            background-color: #3CB371;
-            border: none;
-            padding: 10px 20px;
-            font-size: 4vw;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #2E8B57;
-        }
-
-        #capture-btn {
-            margin-top: 20px;
-            display: none;
-        }
-
         @media (min-width: 768px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            button {
+                font-size: 18px;
+            }
+
             #webcam-container {
                 width: 300px;
                 height: 300px;
@@ -59,17 +73,45 @@
             #label-container {
                 font-size: 18px;
             }
+        }
 
-            button {
-                font-size: 18px;
-            }
+        .back-button {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Herbal Plant Identifier</h1>
-    <div id="webcam-container"></div>
-    <div id="label-container"></div>
+    <div id="main-page">
+        <h1>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</h1>
+        <button onclick="showPage('chatbot-page')">Chatbot</button>
+        <button onclick="showPage('scanner-page')">Scanner</button>
+        <button onclick="showPage('terms-page')">Terms and Conditions</button>
+    </div>
+
+    <div id="chatbot-page">
+        <h1>Chat with Herby</h1>
+        <div id="chatbox">
+            <p>Hi, I'm Herby! How can I help you?</p>
+        </div>
+        <input type="text" id="user-input" placeholder="Describe your symptoms...">
+        <button onclick="sendMessage()">Send</button>
+        <button class="back-button" onclick="showPage('main-page')">Back</button>
+    </div>
+
+    <div id="scanner-page">
+        <h1>Herbal Plant Identifier</h1>
+        <button type="button" onclick="init()">Start Scanner</button>
+        <div id="webcam-container"></div>
+        <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
+        <div id="label-container"></div>
+        <button class="back-button" onclick="showPage('main-page')">Back</button>
+    </div>
+
+    <div id="terms-page">
+        <h1>Terms and Conditions</h1>
+        <div id="terms-content"></div>
+        <button class="back-button" onclick="showPage('main-page')">Back</button>
+    </div>
 
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -82,8 +124,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
     <script type="text/javascript">
-        window.onload = function() {
-            const firebaseConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
             authDomain: "herby-21c6a.firebaseapp.com",
             databaseURL: "https://herby-21c6a-default-rtdb.firebaseio.com",
@@ -91,87 +132,145 @@
             storageBucket: "herby-21c6a.appspot.com",
             messagingSenderId: "374602315706",
             appId: "1:374602315706:web:1b948f85b8c1e6915c0f83"
-            };
+        };
 
-            const app = firebase.initializeApp(firebaseConfig);
-            const database = firebase.database();
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-            const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
+        const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
 
-            let model, labelContainer, maxPredictions;
+        let model, video, labelContainer, maxPredictions;
 
-            async function init() {
-                try {
-                    const modelURL = URL + "model.json";
-                    const metadataURL = URL + "metadata.json";
+        function showPage(pageId) {
+            document.getElementById("main-page").style.display = "none";
+            document.getElementById("chatbot-page").style.display = "none";
+            document.getElementById("scanner-page").style.display = "none";
+            document.getElementById("terms-page").style.display = "none";
+            document.getElementById(pageId).style.display = "block";
+        }
 
-                    model = await tmImage.load(modelURL, metadataURL);
-                    maxPredictions = model.getTotalClasses();
+        async function init() {
+            try {
+                const modelURL = URL + "model.json";
+                const metadataURL = URL + "metadata.json";
 
-                    labelContainer = document.getElementById("label-container");
-                    labelContainer.appendChild(document.createElement("div"));
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
 
-                    // Check if there is an image URL parameter
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const imageUrl = urlParams.get('image');
-                    if (imageUrl) {
-                        processImageFromUrl(imageUrl);
-                    }
-                } catch (error) {
-                    console.error("Error initializing the model:", error);
+                const constraints = { video: { facingMode: { exact: "environment" }, width: 300, height: 300 } };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video = document.createElement("video");
+
+                video.width = 300;
+                video.height = 300;
+                video.srcObject = stream;
+                video.play();
+
+                document.getElementById("webcam-container").appendChild(video);
+
+                labelContainer = document.getElementById("label-container");
+                labelContainer.appendChild(document.createElement("div"));
+
+                document.getElementById("capture-btn").style.display = "inline-block";
+
+                video.onloadedmetadata = () => {
+                    window.requestAnimationFrame(loop);
+                };
+
+            } catch (error) {
+                console.error("Error initializing the webcam or model:", error);
+            }
+        }
+
+        async function loop() {
+            window.requestAnimationFrame(loop);
+        }
+
+        async function predict(imageElement) {
+            const predictions = await model.predict(imageElement);
+            let herbalPlantFound = false;
+
+            for (let i = 0; i < maxPredictions; i++) {
+                const className = predictions[i].className;
+                const probability = predictions[i].probability.toFixed(2);
+
+                if (probability >= 0.95) {
+                    labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
+                    herbalPlantFound = true;
+                    fetchDescription(className);
+                    break;
                 }
             }
 
-            async function processImageFromUrl(imageUrl) {
-                const img = new Image();
-                img.src = imageUrl;
-
-                img.onload = async () => {
-                    const result = await predict(img);
-                    displayResult(result);
-                };
+            if (!herbalPlantFound) {
+                labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
             }
+        }
 
-            async function predict(imageElement) {
-                const predictions = await model.predict(imageElement);
-                let herbalPlantFound = false;
-                let result = { plant: "Not a Herbal Plant", description: "" };
+        async function fetchDescription(plantName) {
+            const descriptionRef = database.ref('herbalPlants/' + plantName);
 
-                for (let i = 0; i < maxPredictions; i++) {
-                    const className = predictions[i].className;
-                    const probability = predictions[i].probability.toFixed(2);
+            descriptionRef.once('value').then((snapshot) => {
+                const description = snapshot.val();
+                if (description) {
+                    labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
+                } else {
+                    labelContainer.childNodes[0].innerHTML += `<br>Description not found in database.`;
+                }
+            });
+        }
 
-                    if (probability >= 0.5) {
-                        result.plant = `${className} (${probability * 100}%)`;
-                        herbalPlantFound = true;
-                        result.description = await fetchDescription(className);
+        async function captureImage() {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            await predict(canvas);
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            if (userInput.trim() === '') return;
+
+            const chatbox = document.getElementById('chatbox');
+            const userMessage = `<p>You: ${userInput}</p>`;
+            chatbox.innerHTML += userMessage;
+
+            const symptomRef = database.ref('herbalPlants');
+            symptomRef.once('value').then((snapshot) => {
+                const plants = snapshot.val();
+                let foundResponse = false;
+
+                for (const plant in plants) {
+                    if (plants[plant].symptoms && plants[plant].symptoms.toLowerCase().includes(userInput.toLowerCase())) {
+                        const botMessage = `<p>Herby: ${plants[plant].name} can help with ${userInput}. ${plants[plant].description}</p>`;
+                        chatbox.innerHTML += botMessage;
+                        foundResponse = true;
                         break;
                     }
                 }
 
-                return result;
-            }
+                if (!foundResponse) {
+                    chatbox.innerHTML += "<p>Herby: I'm sorry, I couldn't find a herbal plant for that symptom.</p>";
+                }
 
-            async function fetchDescription(plantName) {
-                const descriptionRef = database.ref('herbalPlants/' + plantName);
-                let description = "Description not found in database.";
-
-                await descriptionRef.once('value').then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        description = data;
-                    }
-                });
-
-                return description;
-            }
-
-            function displayResult(result) {
-                labelContainer.childNodes[0].innerHTML = `Identified: ${result.plant}<br>Description: ${result.description}`;
-            }
-
-            window.init = init;
+                document.getElementById('user-input').value = '';
+            });
         }
+
+        function loadTermsAndConditions() {
+            const termsRef = database.ref('termsAndConditions');
+            termsRef.once('value').then((snapshot) => {
+                const terms = snapshot.val();
+                document.getElementById('terms-content').innerHTML = terms || "No terms and conditions found.";
+            });
+        }
+
+        showPage('main-page');
+        loadTermsAndConditions();
     </script>
 </body>
 </html>
