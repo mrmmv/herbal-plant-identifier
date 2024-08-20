@@ -17,7 +17,14 @@
 
         h1 {
             font-size: 5vw;
-            margin-bottom: 20px;
+        }
+
+        #menu, #chatbot, #scanner, #terms {
+            display: none;
+        }
+
+        #menu {
+            display: block;
         }
 
         button {
@@ -28,21 +35,12 @@
             color: white;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            margin: 10px;
-            width: 80%;
+            transition: background-color 0.3s ease;
+            margin: 20px;
         }
 
         button:hover {
             background-color: #2E8B57;
-            transform: scale(1.05);
-        }
-
-        #main-page,
-        #chatbot-page,
-        #scanner-page,
-        #terms-page {
-            display: none;
         }
 
         #webcam-container {
@@ -61,15 +59,49 @@
             font-size: 4vw;
         }
 
+        #chat-window {
+            background-color: #f0f0f0;
+            color: black;
+            width: 90%;
+            max-width: 400px;
+            height: 400px;
+            overflow-y: auto;
+            margin: 20px auto;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .user-message {
+            background-color: #3CB371;
+            color: white;
+            text-align: right;
+        }
+
+        .bot-message {
+            background-color: #2E8B57;
+            color: white;
+            text-align: left;
+        }
+
+        #chat-input {
+            width: 80%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        #send-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
         @media (min-width: 768px) {
-            h1 {
-                font-size: 24px;
-            }
-
-            button {
-                font-size: 18px;
-            }
-
             #webcam-container {
                 width: 300px;
                 height: 300px;
@@ -78,114 +110,57 @@
             #label-container {
                 font-size: 18px;
             }
-        }
 
-        .back-button {
-            margin-top: 20px;
-        }
+            button {
+                font-size: 18px;
+            }
 
-        /* Chatbot Design */
-        #chatbox {
-            height: 60vh;
-            overflow-y: auto;
-            background-color: #fff;
-            color: #333;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .user-message,
-        .bot-message {
-            margin: 10px;
-            padding: 10px;
-            border-radius: 15px;
-            max-width: 80%;
-            clear: both;
-        }
-
-        .user-message {
-            background-color: #3CB371;
-            color: white;
-            float: right;
-        }
-
-        .bot-message {
-            background-color: #f1f1f1;
-            color: #333;
-            float: left;
-        }
-
-        #user-input {
-            width: 80%;
-            padding: 10px;
-            border-radius: 20px;
-            border: 1px solid #ccc;
-            margin-bottom: 10px;
-        }
-
-        #chat-input-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #chat-input-container button {
-            width: 15%;
-            margin-left: 10px;
+            h1 {
+                font-size: 32px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div id="main-page">
-        <h1>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</h1>
-        <button onclick="showPage('chatbot-page')">Chatbot</button>
-        <button onclick="showPage('scanner-page')">Scanner</button>
-        <button onclick="showPage('terms-page')">Terms and Conditions</button>
+    <h1>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</h1>
+
+    <!-- Main Menu -->
+    <div id="menu">
+        <button type="button" onclick="showSection('chatbot')">Chatbot</button>
+        <button type="button" onclick="showSection('scanner')">Scanner</button>
+        <button type="button" onclick="showSection('terms')">Terms and Conditions</button>
     </div>
 
-    <div id="chatbot-page">
-        <h1>Chat with Herby</h1>
-        <div id="chatbox">
-            <div class="bot-message">Hi, I'm Herby! How can I help you?</div>
-        </div>
-        <div id="chat-input-container">
-            <input type="text" id="user-input" placeholder="Describe your symptoms...">
-            <button onclick="sendMessage()">Send</button>
-        </div>
-        <button class="back-button" onclick="showPage('main-page', true)">Back</button>
+    <!-- Chatbot -->
+    <div id="chatbot">
+        <div id="chat-window"></div>
+        <input type="text" id="chat-input" placeholder="Type your message..." />
+        <button id="send-btn" type="button" onclick="sendMessage()">Send</button>
     </div>
 
-    <div id="scanner-page">
-        <h1>Herbal Plant Identifier</h1>
-        <button type="button" onclick="init()">Start Scanner</button>
+    <!-- Scanner -->
+    <div id="scanner">
+        <button type="button" onclick="init()">Start Webcam</button>
         <div id="webcam-container"></div>
         <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
         <div id="label-container"></div>
-        <button class="back-button" onclick="showPage('main-page', true)">Back</button>
     </div>
 
-    <div id="terms-page">
-        <h1>Terms and Conditions</h1>
+    <!-- Terms and Conditions -->
+    <div id="terms">
         <div id="terms-content"></div>
-        <button class="back-button" onclick="showPage('main-page', true)">Back</button>
     </div>
 
-    <!-- Firebase App (the core Firebase SDK) -->
+    <!-- Firebase and TensorFlow Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <!-- Firebase Realtime Database -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-
-    <!-- TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <!-- Teachable Machine -->
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
     <script type="text/javascript">
         const firebaseConfig = {
-             apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
+           apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
             authDomain: "herby-21c6a.firebaseapp.com",
             databaseURL: "https://herby-21c6a-default-rtdb.firebaseio.com",
             projectId: "herby-21c6a",
@@ -197,47 +172,31 @@
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
-
         let model, video, labelContainer, maxPredictions;
 
-        function showPage(pageId, reset = false) {
-            if (reset) {
-                resetPages();
-            }
-            document.getElementById("main-page").style.display = "none";
-            document.getElementById("chatbot-page").style.display = "none";
-            document.getElementById("scanner-page").style.display = "none";
-            document.getElementById("terms-page").style.display = "none";
-            document.getElementById(pageId).style.display = "block";
-        }
+        async function showSection(section) {
+            document.getElementById("menu").style.display = "none";
+            document.getElementById("chatbot").style.display = "none";
+            document.getElementById("scanner").style.display = "none";
+            document.getElementById("terms").style.display = "none";
+            document.getElementById(section).style.display = "block";
 
-        function resetPages() {
-            document.getElementById('chatbox').innerHTML = '<div class="bot-message">Hi, I\'m Herby! How can I help you?</div>';
-            document.getElementById('user-input').value = '';
-            document.getElementById('label-container').innerHTML = '';
-            const webcamContainer = document.getElementById("webcam-container");
-            while (webcamContainer.firstChild) {
-                webcamContainer.removeChild(webcamContainer.firstChild);
+            if (section === "terms") {
+                loadTerms();
+            } else if (section === "chatbot") {
+                initializeChatbot();
             }
-            document.getElementById("capture-btn").style.display = "none";
         }
 
         async function init() {
             try {
-                const modelURL = URL + "model.json";
-                const metadataURL = URL + "metadata.json";
+                const modelURL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/model.json";
+                const metadataURL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/metadata.json";
 
                 model = await tmImage.load(modelURL, metadataURL);
                 maxPredictions = model.getTotalClasses();
 
-                const constraints = {
-                    video: {
-                        facingMode: { exact: "environment" },
-                        width: 300,
-                        height: 300
-                    }
-                };
+                const constraints = { video: { facingMode: "environment", width: 300, height: 300 } };
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video = document.createElement("video");
 
@@ -246,24 +205,29 @@
                 video.srcObject = stream;
                 video.play();
 
+                document.getElementById("webcam-container").innerHTML = '';
                 document.getElementById("webcam-container").appendChild(video);
 
                 labelContainer = document.getElementById("label-container");
+                labelContainer.innerHTML = '';
                 labelContainer.appendChild(document.createElement("div"));
 
                 document.getElementById("capture-btn").style.display = "inline-block";
-
-                video.onloadedmetadata = () => {
-                    window.requestAnimationFrame(loop);
-                };
 
             } catch (error) {
                 console.error("Error initializing the webcam or model:", error);
             }
         }
 
-        async function loop() {
-            window.requestAnimationFrame(loop);
+        async function captureImage() {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            await predict(canvas);
         }
 
         async function predict(imageElement) {
@@ -276,87 +240,86 @@
 
                 if (probability >= 0.95) {
                     labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
-
-                    // Fetch health benefits from Firebase
-                    const query = database.ref('herbal_medicine').orderByChild('name').equalTo(className);
-                    query.once('value', (snapshot) => {
-                        if (snapshot.exists()) {
-                            snapshot.forEach((data) => {
-                                const healthBenefits = data.val().benefits;
-                                labelContainer.childNodes[0].innerHTML += `<br>Health Benefits: ${healthBenefits}`;
-                            });
-                        } else {
-                            labelContainer.childNodes[0].innerHTML += `<br>Health Benefits: Not found in the database.`;
-                        }
-                    });
-
                     herbalPlantFound = true;
+                    fetchDescription(className);
                     break;
                 }
             }
 
             if (!herbalPlantFound) {
-                labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant.";
+                labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
             }
         }
 
-        function captureImage() {
-            if (!video) return;
-            predict(video);
+        async function fetchDescription(plantName) {
+            const descriptionRef = database.ref('herbalPlants/' + plantName);
+
+            descriptionRef.once('value').then((snapshot) => {
+                const description = snapshot.val();
+                if (description) {
+                    labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
+                } else {
+                    labelContainer.childNodes[0].innerHTML += `<br>Description not found in database.`;
+                }
+            });
+        }
+
+        async function loadTerms() {
+            const termsRef = database.ref('termsAndConditions');
+
+            termsRef.once('value').then((snapshot) => {
+                const terms = snapshot.val();
+                document.getElementById('terms-content').innerHTML = terms ? terms : "Terms and conditions not found.";
+            });
+        }
+
+        function initializeChatbot() {
+            const chatWindow = document.getElementById("chat-window");
+            chatWindow.innerHTML = '<div class="message bot-message">Hi, I\'m Herby. How can I help you?</div>';
         }
 
         function sendMessage() {
-            const userInput = document.getElementById('user-input').value.trim();
-            if (userInput) {
-                addUserMessage(userInput);
-                const symptomKeywords = analyzeSymptoms(userInput);
-                findHerbalRemedy(symptomKeywords);
+            const input = document.getElementById("chat-input").value;
+            const chatWindow = document.getElementById("chat-window");
+
+            if (input.trim() !== "") {
+                const userMessage = document.createElement("div");
+                userMessage.className = "message user-message";
+                userMessage.textContent = input;
+                chatWindow.appendChild(userMessage);
+
+                getChatbotResponse(input);
             }
+
+            document.getElementById("chat-input").value = "";
+            chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
-        function addUserMessage(message) {
-            const chatbox = document.getElementById('chatbox');
-            const userMessageDiv = document.createElement('div');
-            userMessageDiv.classList.add('user-message');
-            userMessageDiv.innerText = message;
-            chatbox.appendChild(userMessageDiv);
-            chatbox.scrollTop = chatbox.scrollHeight;
+        async function getChatbotResponse(message) {
+            const chatWindow = document.getElementById("chat-window");
+
+            const responseRef = database.ref('chatResponses');
+            responseRef.once('value').then((snapshot) => {
+                const responses = snapshot.val();
+                const responseMessage = responses ? findResponse(message, responses) : "Sorry, I couldn't find any relevant information.";
+
+                const botMessage = document.createElement("div");
+                botMessage.className = "message bot-message";
+                botMessage.textContent = responseMessage;
+                chatWindow.appendChild(botMessage);
+
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            });
         }
 
-        function addBotMessage(message) {
-            const chatbox = document.getElementById('chatbox');
-            const botMessageDiv = document.createElement('div');
-            botMessageDiv.classList.add('bot-message');
-            botMessageDiv.innerHTML = message;
-            chatbox.appendChild(botMessageDiv);
-            chatbox.scrollTop = chatbox.scrollHeight;
-        }
-
-        function analyzeSymptoms(userInput) {
-            const keywords = ['fever', 'cough', 'headache', 'stomachache', 'pain', 'cold'];
-            const foundKeywords = keywords.filter(keyword => userInput.toLowerCase().includes(keyword));
-            return foundKeywords;
-        }
-
-        function findHerbalRemedy(symptomKeywords) {
-            if (symptomKeywords.length > 0) {
-                const query = database.ref('herbal_medicine');
-                query.once('value', (snapshot) => {
-                    let remedyFound = false;
-                    snapshot.forEach((data) => {
-                        const symptoms = data.val().symptoms || [];
-                        if (symptoms.some(symptom => symptomKeywords.includes(symptom))) {
-                            addBotMessage(`For ${symptomKeywords.join(', ')}, you can try ${data.val().name}. Benefits: ${data.val().benefits}`);
-                            remedyFound = true;
-                        }
-                    });
-                    if (!remedyFound) {
-                        addBotMessage("Sorry, I couldn't find a remedy for those symptoms.");
-                    }
-                });
-            } else {
-                addBotMessage("Please describe your symptoms in more detail.");
+        function findResponse(message, responses) {
+            message = message.toLowerCase();
+            for (let symptom in responses) {
+                if (message.includes(symptom.toLowerCase())) {
+                    return responses[symptom];
+                }
             }
+            return "Sorry, I couldn't find any relevant information.";
         }
     </script>
 </body>
