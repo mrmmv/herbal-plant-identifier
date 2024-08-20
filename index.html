@@ -3,189 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector Application</title>
+    <title>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</title>
     <style>
         body {
             margin: 0;
             font-family: Arial, sans-serif;
+            text-align: center;
             background: linear-gradient(to right, #2E8B57, #3CB371);
             color: white;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
+            padding: 10px;
+            overflow: hidden;
         }
 
         h1 {
-            font-size: 6vw;
+            font-size: 5vw;
             margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .button-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            max-width: 400px;
+            transition: opacity 0.5s ease;
         }
 
         button {
             background-color: #3CB371;
             border: none;
-            padding: 15px;
-            font-size: 5vw;
+            padding: 10px 20px;
+            font-size: 4vw;
             color: white;
-            border-radius: 10px;
+            border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.3s ease;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+            margin: 10px;
+            width: 80%;
         }
 
         button:hover {
             background-color: #2E8B57;
-            transform: translateY(-2px);
+            transform: scale(1.05);
         }
 
-        button:active {
-            transform: translateY(2px);
-        }
-
-        .page {
+        #main-page, #chatbot-page, #scanner-page, #terms-page {
             display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        #chatbot-page, #scanner-page, #terms-page {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #chatbox {
-            background: white;
-            color: black;
-            padding: 10px;
-            border-radius: 10px;
-            width: 100%;
-            max-width: 400px;
-            height: 300px;
-            overflow-y: auto;
-            box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
-        }
-
-        #user-input {
-            width: calc(100% - 20px);
-            max-width: 380px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
         #webcam-container {
-            margin-top: 20px;
+            margin: 20px auto;
+            width: 80vw;
+            height: 80vw;
+            max-width: 300px;
+            max-height: 300px;
             border: 5px solid #fff;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .back-button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 4vw;
-            color: white;
-            background-color: #FF6347;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .back-button:hover {
-            background-color: #FF4500;
+            position: relative;
         }
 
         #label-container {
             margin-top: 20px;
             font-size: 4vw;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
-        }
-
-        #terms-content {
-            text-align: left;
-            max-width: 400px;
-            line-height: 1.6;
-            font-size: 4vw;
         }
 
         @media (min-width: 768px) {
             h1 {
-                font-size: 36px;
+                font-size: 24px;
             }
 
-            button, .back-button {
+            button {
                 font-size: 18px;
             }
 
-            #user-input {
-                font-size: 16px;
+            #webcam-container {
+                width: 300px;
+                height: 300px;
             }
 
             #label-container {
                 font-size: 18px;
             }
+        }
 
-            #terms-content {
-                font-size: 16px;
+        .back-button {
+            margin-top: 20px;
+        }
+
+        .animated-plant {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            animation: float 4s infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
             }
+            50% {
+                transform: translateY(-20px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        #plant1 {
+            left: 10%;
+            top: 20%;
+            animation-duration: 5s;
+        }
+
+        #plant2 {
+            right: 10%;
+            top: 30%;
+            animation-duration: 6s;
+        }
+
+        #plant3 {
+            left: 50%;
+            bottom: 10%;
+            animation-duration: 4s;
         }
     </style>
 </head>
 <body>
-    <h1>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</h1>
-
-    <div class="button-container" id="main-page">
-        <button type="button" onclick="showPage('chatbot-page')">Chatbot</button>
-        <button type="button" onclick="showPage('scanner-page')">Scanner</button>
-        <button type="button" onclick="showPage('terms-page')">Terms and Conditions</button>
+    <div id="main-page">
+        <h1>Detector Application with Decision-Making Capabilities and Health Benefits of Herbal Plants in the Philippines</h1>
+        <button onclick="showPage('chatbot-page')">Chatbot</button>
+        <button onclick="showPage('scanner-page')">Scanner</button>
+        <button onclick="showPage('terms-page')">Terms and Conditions</button>
     </div>
 
-    <div id="chatbot-page" class="page">
-        <div id="chatbot-content">
-            <div id="chatbox">
-                <p>Herby: Hi, I'm Herby! How can I help you today?</p>
-            </div>
-            <input type="text" id="user-input" placeholder="Describe your symptoms..." onkeypress="if(event.keyCode === 13) getHerbalSuggestion()">
-            <button type="button" onclick="getHerbalSuggestion()">Send</button>
+    <div id="chatbot-page">
+        <h1>Chat with Herby</h1>
+        <div id="chatbox">
+            <p>Hi, I'm Herby! How can I help you?</p>
         </div>
-        <button class="back-button" type="button" onclick="showPage('main-page')">Back</button>
+        <input type="text" id="user-input" placeholder="Describe your symptoms...">
+        <button onclick="sendMessage()">Send</button>
+        <button class="back-button" onclick="showPage('main-page')">Back</button>
     </div>
 
-    <div id="scanner-page" class="page">
+    <div id="scanner-page">
+        <h1>Herbal Plant Identifier</h1>
         <button type="button" onclick="init()">Start Scanner</button>
         <div id="webcam-container"></div>
         <button id="capture-btn" type="button" onclick="captureImage()">Capture Image</button>
         <div id="label-container"></div>
-        <button class="back-button" type="button" onclick="showPage('main-page')">Back</button>
+        <button class="back-button" onclick="showPage('main-page')">Back</button>
     </div>
 
-    <div id="terms-page" class="page">
+    <div id="terms-page">
+        <h1>Terms and Conditions</h1>
         <div id="terms-content"></div>
-        <button class="back-button" type="button" onclick="showPage('main-page')">Back</button>
+        <button class="back-button" onclick="showPage('main-page')">Back</button>
     </div>
 
+    <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <!-- Firebase Realtime Database -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    <script>
+
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <!-- Teachable Machine -->
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+    <script type="text/javascript">
         const firebaseConfig = {
             apiKey: "AIzaSyDFeZJiNMtV29YPQ7F2FbpeWT5q3asRGCE",
             authDomain: "herby-21c6a.firebaseapp.com",
@@ -199,31 +179,128 @@
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        const URL = "https://teachablemachine.withgoogle.com/models/8jAmAwJIs/";
+
+        let model, video, labelContainer, maxPredictions;
+
         function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => {
-                page.style.display = 'none';
+            const pages = ['main-page', 'chatbot-page', 'scanner-page', 'terms-page'];
+            pages.forEach(page => {
+                document.getElementById(page).style.display = 'none';
             });
-            document.getElementById(pageId).style.display = 'flex';
+            document.getElementById(pageId).style.display = 'block';
+            document.getElementById(pageId).style.opacity = '1';
+            document.getElementById(pageId).style.transform = 'translateY(0)';
         }
 
-        function getHerbalSuggestion() {
-            const input = document.getElementById('user-input').value.trim().toLowerCase();
+        async function init() {
+            try {
+                const modelURL = URL + "model.json";
+                const metadataURL = URL + "metadata.json";
+
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+
+                const constraints = { video: { facingMode: { exact: "environment" }, width: 300, height: 300 } };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video = document.createElement("video");
+
+                video.width = 300;
+                video.height = 300;
+                video.srcObject = stream;
+                video.play();
+
+                document.getElementById("webcam-container").appendChild(video);
+
+                labelContainer = document.getElementById("label-container");
+                labelContainer.appendChild(document.createElement("div"));
+
+                document.getElementById("capture-btn").style.display = "inline-block";
+
+                video.onloadedmetadata = () => {
+                    window.requestAnimationFrame(loop);
+                };
+
+            } catch (error) {
+                console.error("Error initializing the webcam or model:", error);
+            }
+        }
+
+        async function loop() {
+            window.requestAnimationFrame(loop);
+        }
+
+        async function predict(imageElement) {
+            const predictions = await model.predict(imageElement);
+            let herbalPlantFound = false;
+
+            for (let i = 0; i < maxPredictions; i++) {
+                const className = predictions[i].className;
+                const probability = predictions[i].probability.toFixed(2);
+
+                if (probability >= 0.95) {
+                    labelContainer.childNodes[0].innerHTML = `Identified: ${className} (${probability * 100}%)`;
+                    herbalPlantFound = true;
+                    fetchDescription(className);
+                    break;
+                }
+            }
+
+            if (!herbalPlantFound) {
+                labelContainer.childNodes[0].innerHTML = "Not a Herbal Plant";
+            }
+        }
+
+        async function fetchDescription(plantName) {
+            const descriptionRef = database.ref('herbalPlants/' + plantName);
+
+            descriptionRef.once('value').then((snapshot) => {
+                const description = snapshot.val();
+                if (description) {
+                    labelContainer.childNodes[0].innerHTML += `<br>Description: ${description}`;
+                } else {
+                    labelContainer.childNodes[0].innerHTML += `<br>Description not found in database.`;
+                }
+            });
+        }
+
+        async function captureImage() {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageURL = canvas.toDataURL();
+            document.getElementById('webcam-container').innerHTML = `<img src="${imageURL}" alt="Captured Image" style="width:100%; height:100%;">`;
+
+            await predict(canvas);
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            if (userInput.trim() === '') return;
+
             const chatbox = document.getElementById('chatbox');
+            const userMessage = `<p>You: ${userInput}</p>`;
+            chatbox.innerHTML += userMessage;
 
-            let found = false;
+            const symptomRef = database.ref('herbalPlants');
+            symptomRef.once('value').then((snapshot) => {
+                const plants = snapshot.val();
+                let foundResponse = false;
 
-            database.ref('herbalPlants').once('value').then((snapshot) => {
-                snapshot.forEach((childSnapshot) => {
-                    const plant = childSnapshot.val();
-                    const symptoms = plant.symptoms.split(',').map(s => s.trim().toLowerCase());
-
-                    if (symptoms.includes(input)) {
-                        chatbox.innerHTML += `<p>Herby: For ${input}, you can try using ${plant.name}. ${plant.description}</p>`;
-                        found = true;
+                for (const plant in plants) {
+                    if (plants[plant].symptoms && plants[plant].symptoms.toLowerCase().includes(userInput.toLowerCase())) {
+                        const botMessage = `<p>Herby: ${plants[plant].name} can help with ${userInput}. ${plants[plant].description}</p>`;
+                        chatbox.innerHTML += botMessage;
+                        foundResponse = true;
+                        break;
                     }
-                });
+                }
 
-                if (!found) {
+                if (!foundResponse) {
                     chatbox.innerHTML += "<p>Herby: I'm sorry, I couldn't find a herbal plant for that symptom.</p>";
                 }
 
@@ -239,18 +316,16 @@
             });
         }
 
-        window.onload = function() {
-            showPage('main-page');
-            loadTermsAndConditions();
-        }
+        // Initialize the page
+        showPage('main-page');
+        loadTermsAndConditions();
 
-        async function init() {
-            // Scanner page code
-        }
-
-        async function captureImage() {
-            // Capture image and process
-        }
+        // Add animated plant images to the background
+        document.body.innerHTML += `
+            <img id="plant1" class="animated-plant" src="plant1.png" alt="Animated Plant">
+            <img id="plant2" class="animated-plant" src="plant2.png" alt="Animated Plant">
+            <img id="plant3" class="animated-plant" src="plant3.png" alt="Animated Plant">
+        `;
     </script>
 </body>
 </html>
